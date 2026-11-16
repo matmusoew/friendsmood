@@ -1,0 +1,2083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Moodgram — by Matmusoevs Team</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+  :root {
+    --bg: #060913;
+    --card: #0e1322;
+    --card2: #161d33;
+    --border: #202a47;
+    --text: #f3f6fc;
+    --muted: #8894b8;
+    --accent: #3b82f6;
+    --accent2: #8b5cf6;
+    --neon: rgba(59, 130, 246, 0.22);
+  }
+  html.light {
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --card2: #eef1f9;
+    --border: #dce2f0;
+    --text: #0f172a;
+    --muted: #64748b;
+    --accent: #2563eb;
+    --accent2: #7c3aed;
+    --neon: rgba(37, 99, 235, 0.14);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    margin: 0;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.16);
+  }
+  .glass {
+    background: rgba(14, 19, 34, 0.86);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+  html.light .glass { background: rgba(255, 255, 255, 0.9); }
+  .soft { background: var(--card2); }
+  .muted { color: var(--muted); }
+  .line { border-color: var(--border); }
+  .input {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    color: var(--text);
+    padding: 11px 14px;
+    width: 100%;
+    outline: none;
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--neon);
+  }
+  .btn {
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    color: #fff;
+    border-radius: 14px;
+    font-weight: 600;
+    padding: 10px 16px;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.12s, opacity 0.2s;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-ghost {
+    background: var(--card2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    font-weight: 600;
+    padding: 9px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: transform 0.12s;
+  }
+  .btn-ghost:active { transform: scale(0.97); }
+  .grad { background: linear-gradient(135deg, #1d4ed8, #3b82f6, #8b5cf6); }
+  .ig-ring { background: linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899, #f59e0b); }
+  .logo-text {
+    background: linear-gradient(90deg, #60a5fa, #a78bfa, #38bdf8);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .hs::-webkit-scrollbar { display: none; }
+  .hs { scrollbar-width: none; }
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+    cursor: pointer;
+  }
+  .icon-btn:active { transform: scale(0.82); }
+  .mood-chip {
+    font-size: 26px;
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid transparent;
+    background: var(--card2);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .mood-chip.on {
+    border-color: var(--accent);
+    background: var(--neon);
+    transform: scale(1.06);
+  }
+  #toast { transition: opacity 0.25s, transform 0.25s; }
+  .call-root {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    background: #05070e;
+    flex-direction: column;
+    color: #fff;
+  }
+</style>
+</head>
+<body class="min-h-screen">
+
+<div id="fatal-err" style="display:none" class="fixed top-3 inset-x-3 z-50 bg-rose-900 text-white p-4 rounded-2xl text-xs font-mono shadow-2xl"></div>
+
+<aside id="side" class="hidden md:flex fixed inset-y-0 left-0 w-64 flex-col gap-1 border-r line glass p-4 z-30"></aside>
+<header id="top" class="sticky top-0 z-30 glass border-b line px-4 pt-3 pb-2.5 flex items-center justify-between md:hidden"></header>
+<main id="main" class="px-4 py-4 pb-28 md:pb-10 md:ml-64 max-w-2xl mx-auto min-h-screen"></main>
+<nav id="nav" class="md:hidden fixed bottom-0 inset-x-0 z-30 border-t line glass flex justify-around items-center h-16 px-2"></nav>
+
+<div id="callroot" class="call-root" style="display:none"></div>
+<div id="modalroot"></div>
+<div id="toast" class="fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 card px-4 py-2.5 text-sm opacity-0 pointer-events-none z-50 max-w-[90%] text-center shadow-2xl border border-blue-500"></div>
+
+<script>
+window.onerror = function(msg, src, line) {
+  const box = document.getElementById('fatal-err');
+  if (box) {
+    box.style.display = 'block';
+    box.innerHTML = '<b>Moodgram Error:</b> ' + msg + ' (Line ' + line + ')';
+  }
+};
+
+/* ============================================================================
+   1. FIREBASE CONFIGURATION (PASTE YOUR KEYS HERE)
+   ============================================================================ */
+const firebaseConfig = {
+    apiKey: "AIzaSyCMrBnRTtlCZD8HJJ-OmXJZiIvkQCH5qio",
+
+  authDomain: "friendsmood-acf05.firebaseapp.com",
+
+  projectId: "friendsmood-acf05",
+
+  storageBucket: "friendsmood-acf05.firebasestorage.app",
+
+  messagingSenderId: "172568873317",
+
+  appId: "1:172568873317:web:2b25bdc7117c782109398c",
+
+  measurementId: "G-MPTXB3FR95"
+};
+
+const APP_CONFIG = {
+  APP_NAME: "Moodgram",
+  CREATOR: "Matmusoevs",
+  TEAM_TAGLINE: "from matmusoevs team",
+  LOGO_PATH: "aps.jpg",
+  FREE_BADGE_LIMIT: 30,
+  PREMIUM_PRICE_USD: 20,
+  PAYMENT_PROVIDER: "STRIPE_OR_GOOGLE_PLAY_BILLING"
+};
+
+const HAS_FIREBASE_SDK = typeof firebase !== 'undefined';
+const CONFIGURED = HAS_FIREBASE_SDK && !Object.values(firebaseConfig).some(v => String(v).startsWith('PASTE_') || !v);
+let auth = null, db = null;
+
+if (CONFIGURED) {
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    auth = firebase.auth();
+    db = firebase.firestore();
+  } catch (e) { console.error(e); }
+}
+
+const FV = () => firebase.firestore.FieldValue;
+const TS = () => FV().serverTimestamp();
+
+/* ============================================================================
+   2. INSTAGRAM-STYLE MODERN SVG ICON SYSTEM
+   ============================================================================ */
+const ICONS = {
+  home: (active) => active
+    ? `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M22 23h-6.001a1 1 0 0 1-1-1v-5.455a2.997 2.997 0 1 0-5.993 0V22a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V11.543a1.002 1.002 0 0 1 .31-.724l10-9.543a1.001 1.001 0 0 1 1.38 0l10 9.543a1.002 1.002 0 0 1 .31.724V22a1 1 0 0 1-1 1Z"/></svg>`
+    : `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.005 16.545a2.997 2.997 0 0 1 2.997-2.997A2.997 2.997 0 0 1 15 16.545V22h7V11.543L12 2 2 11.543V22h7.005Z"/></svg>`,
+  mood: (active) => active
+    ? `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm-3.5 7a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm7 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm-3.5 8.5c-2.67 0-4.93-1.66-5.83-4h11.66c-.9 2.34-3.16 4-5.83 4z"/></svg>`
+    : `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>`,
+  explore: (active) => active
+    ? `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`
+    : `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
+  chats: (active) => active
+    ? `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.03 2 11c0 2.87 1.5 5.43 3.84 7.08L4.5 22l4.38-2.19c1 .25 2.04.39 3.12.39 5.52 0 10-4.03 10-9s-4.48-9.2-10-9.2zm1 12-2.5-2.66L5.6 14l5.4-5.73L13.5 10.9 18.4 8.27 13 14z"/></svg>`
+    : `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`,
+  notifs: (active) => active
+    ? `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.865 3.469-4.303 3.752-.477-.309-2.143-1.823-4.303-3.752C5.141 14.072 2.5 12.167 2.5 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938Z"/></svg>`
+    : `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
+  profile: (active) => active
+    ? `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 12c5.33 0 8 2.67 8 5v2H4v-2c0-2.33 2.67-5 8-5z"/></svg>`
+    : `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+  settings: (active) => `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${active ? '2.4' : '2'}" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+  heart: (liked) => liked
+    ? `<svg class="w-6 h-6 text-rose-500" viewBox="0 0 24 24" fill="currentColor"><path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.865 3.469-4.303 3.752-.477-.309-2.143-1.823-4.303-3.752C5.141 14.072 2.5 12.167 2.5 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938Z"/></svg>`
+    : `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
+  comment: () => `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`,
+  share: () => `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`,
+  bookmark: (saved) => saved
+    ? `<svg class="w-6 h-6 text-blue-400" viewBox="0 0 24 24" fill="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`
+    : `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`,
+  plusBox: () => `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="5"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`,
+  phone: () => `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`,
+  video: () => `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`,
+  mic: () => `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`,
+  camera: () => `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`,
+  trash: () => `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`
+};
+
+/* ============================================================================
+   3. BUILT-IN SOUND EFFECTS ENGINE (SMS, NOTIFICATION, RINGTONE)
+   ============================================================================ */
+let soundEnabled = localStorage.getItem('mg_sound') !== 'off';
+let audioCtx = null;
+
+function playSound(type) {
+  if (!soundEnabled) return;
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    if (!audioCtx) audioCtx = new Ctx();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    if (type === 'msg_in') {
+      // Crisp double-pop SMS sound
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, now);
+      osc.frequency.setValueAtTime(880, now + 0.08);
+      gain.gain.setValueAtTime(0.14, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+      osc.start(now);
+      osc.stop(now + 0.25);
+    } else if (type === 'msg_out') {
+      // Subtle send whoosh-pop
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(420, now);
+      osc.frequency.exponentialRampToValueAtTime(720, now + 0.09);
+      gain.gain.setValueAtTime(0.09, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+      osc.start(now);
+      osc.stop(now + 0.11);
+    } else if (type === 'notif') {
+      // Pleasant notification chime
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(659.25, now);
+      osc.frequency.setValueAtTime(987.77, now + 0.1);
+      gain.gain.setValueAtTime(0.14, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      osc.start(now);
+      osc.stop(now + 0.35);
+    } else if (type === 'ring') {
+      // Incoming call tone
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523.25, now);
+      osc.frequency.setValueAtTime(659.25, now + 0.15);
+      osc.frequency.setValueAtTime(783.99, now + 0.3);
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+      osc.start(now);
+      osc.stop(now + 0.6);
+    }
+  } catch (_) {}
+}
+
+/* ============================================================================
+   4. LOCALIZATION (EN / RU)
+   ============================================================================ */
+const T = {
+  en: {
+    byline: 'from matmusoevs team',
+    tagline: 'Express your real emotions, share moments, and connect in real time.',
+    loginTitle: 'Sign in to Moodgram',
+    registerTitle: 'Create Moodgram Account',
+    recoverTitle: 'Recover Account',
+    emailOrUser: 'Email or @username',
+    password: 'Password',
+    confirmPassword: 'Confirm Password',
+    firstName: 'First Name',
+    lastName: 'Last Name',
+    choosePhoto: 'Choose Profile Picture (Optional)',
+    signIn: 'Sign In',
+    createAccount: 'Create Account',
+    googleSignIn: 'Continue with Google',
+    forgotPass: 'Forgot password?',
+    noAccount: "Don't have an account? Register",
+    haveAccount: 'Already have an account? Sign In',
+    recoverHint: 'Enter your Moodgram @username to receive a password reset link.',
+    sendReset: 'Send Recovery Link',
+    resetSent: 'If this username exists, a recovery link was sent to its email.',
+    backToLogin: 'Back to Login',
+    completeProfile: 'Choose Your Moodgram Username',
+    saveProfile: 'Complete Setup',
+    home: 'Home',
+    moodTab: 'Mood',
+    friendsMood: 'Friends Mood',
+    explore: 'Explore',
+    chats: 'Messages',
+    notifs: 'Notifications',
+    profile: 'Profile',
+    settings: 'Settings',
+    addStory: 'Your Story',
+    newPost: 'Create Post',
+    shareMood: 'Share Mood',
+    writeCaption: 'Write a caption, use #hashtags or @mentions...',
+    imageUrlPh: 'Image URL (optional) or upload photo below',
+    locationPh: 'Location (e.g., Dushanbe)',
+    publish: 'Publish',
+    addComment: 'Add a comment...',
+    allPosts: 'Posts',
+    noPosts: 'No posts yet. Follow friends or share your first post!',
+    moodCenter: 'Mood Timeline',
+    howFeeling: 'How are you feeling right now?',
+    moodExplainPh: 'Explain your mood in a few words...',
+    postMood: 'Publish Mood',
+    noMoods: 'No moods shared yet. Express how you feel!',
+    noFriendsMood: 'None of your followed friends have posted a mood yet.',
+    searchPh: 'Search @username, name, or #hashtag...',
+    suggestedPeople: 'Suggested Creators',
+    nobodyFound: 'No matching users found.',
+    follow: 'Follow',
+    following: 'Following',
+    followers: 'Followers',
+    editProfile: 'Edit Profile',
+    bio: 'Biography',
+    website: 'Website',
+    privateAccount: 'Private Account',
+    messages: 'Messages',
+    typeMsg: 'Message...',
+    online: 'Online',
+    offline: 'Offline',
+    lastSeen: 'Last seen',
+    recording: 'Recording audio... Tap mic to send',
+    noChats: 'Follow someone or open a profile to start messaging.',
+    calling: 'Calling...',
+    incomingCall: 'Incoming Moodgram Call',
+    voiceCall: 'Audio Call',
+    videoCall: 'Video Call',
+    verificationTitle: 'Moodgram Verification & Premium',
+    freePromoTitle: 'First 30 Users — Free 1-Year Badge',
+    freePromoDesc: 'The first 30 registered creators receive an official blue Moodgram verification badge free for 1 year.',
+    claimFreeBadge: 'Claim Free 1-Year Badge',
+    badgeActive: 'Official Moodgram Badge Active',
+    premiumTitle: 'Moodgram Verified Subscription',
+    premiumPrice: '$20 USD / year',
+    premiumDesc: 'Get the blue Moodgram badge next to your name across posts, moods, comments, and messages.',
+    subscribeNow: 'Subscribe ($20/year)',
+    paymentPending: 'Payment verification pending administrator/provider confirmation.',
+    appearance: 'Appearance',
+    dark: 'Dark',
+    light: 'Light',
+    language: 'Language',
+    soundEffects: 'Message & Notification Sounds',
+    aboutApp: 'About Moodgram',
+    aboutDesc: 'Moodgram is a next-generation social platform created by Matmusoevs where real human emotions (Mood) replace short-video feeds.',
+    errConfig: 'Paste your Firebase config keys in index.html to connect the live backend.',
+    errFields: 'Please fill in all required fields.',
+    errPassMatch: 'Passwords do not match.',
+    errPassLen: 'Password must be at least 6 characters.',
+    errUsername: 'Username must be 3–20 lowercase letters, numbers, or underscores.',
+    errUserTaken: 'This @username is already taken.',
+    errUserNotFound: 'No account found with that @username.',
+    errGeneric: 'Operation failed. Please try again.',
+    toastSaved: 'Changes saved successfully!',
+    toastPosted: 'Published to Moodgram!',
+    toastClaimed: 'Congratulations! Your 1-year Moodgram Badge is active!',
+    logout: 'Log Out'
+  },
+  ru: {
+    byline: 'from matmusoevs team',
+    tagline: 'Делитесь настоящими эмоциями, моментами и общайтесь в реальном времени.',
+    loginTitle: 'Вход в Moodgram',
+    registerTitle: 'Регистрация в Moodgram',
+    recoverTitle: 'Восстановление аккаунта',
+    emailOrUser: 'Email или @username',
+    password: 'Пароль',
+    confirmPassword: 'Подтвердите пароль',
+    firstName: 'Имя',
+    lastName: 'Фамилия',
+    choosePhoto: 'Выбрать фото профиля (необязательно)',
+    signIn: 'Войти',
+    createAccount: 'Создать аккаунт',
+    googleSignIn: 'Продолжить через Google',
+    forgotPass: 'Забыли пароль?',
+    noAccount: 'Нет аккаунта? Зарегистрироваться',
+    haveAccount: 'Уже есть аккаунт? Войти',
+    recoverHint: 'Введите ваш @username в Moodgram, чтобы получить ссылку для сброса пароля.',
+    sendReset: 'Отправить ссылку',
+    resetSent: 'Если этот username существует, ссылка отправлена на привязанный email.',
+    backToLogin: 'Назад ко входу',
+    completeProfile: 'Выберите уникальный @username',
+    saveProfile: 'Завершить настройку',
+    home: 'Лента',
+    moodTab: 'Mood',
+    friendsMood: 'Настроение друзей',
+    explore: 'Обзор',
+    chats: 'Сообщения',
+    notifs: 'Уведомления',
+    profile: 'Профиль',
+    settings: 'Настройки',
+    addStory: 'Ваша история',
+    newPost: 'Создать пост',
+    shareMood: 'Поделиться Mood',
+    writeCaption: 'Напишите подпись, используйте #хештеги или @упоминания...',
+    imageUrlPh: 'Ссылка на фото или загрузите файл ниже',
+    locationPh: 'Местоположение (например, Душанбе)',
+    publish: 'Опубликовать',
+    addComment: 'Добавьте комментарий...',
+    allPosts: 'Публикации',
+    noPosts: 'Публикаций пока нет. Подпишитесь на друзей или создайте первый пост!',
+    moodCenter: 'Лента Mood',
+    howFeeling: 'Что вы сейчас чувствуете?',
+    moodExplainPh: 'Опишите своё настроение в нескольких словах...',
+    postMood: 'Опубликовать Mood',
+    noMoods: 'Записей Mood пока нет. Поделитесь своими эмоциями!',
+    noFriendsMood: 'Ваши друзья ещё не опубликовали своё настроение.',
+    searchPh: 'Поиск по @username, имени или #хештегу...',
+    suggestedPeople: 'Рекомендуемые авторы',
+    nobodyFound: 'Ничего не найдено.',
+    follow: 'Подписаться',
+    following: 'Вы подписаны',
+    followers: 'Подписчики',
+    editProfile: 'Редактировать профиль',
+    bio: 'О себе',
+    website: 'Веб-сайт',
+    privateAccount: 'Закрытый аккаунт',
+    messages: 'Сообщения',
+    typeMsg: 'Сообщение...',
+    online: 'В сети',
+    offline: 'Не в сети',
+    lastSeen: 'Был(а) в сети',
+    recording: 'Запись голоса... Нажмите микрофон для отправки',
+    noChats: 'Подпишитесь на пользователей или откройте профиль, чтобы написать.',
+    calling: 'Вызов...',
+    incomingCall: 'Входящий звонок Moodgram',
+    voiceCall: 'Аудиозвонок',
+    videoCall: 'Видеозвонок',
+    verificationTitle: 'Верификация и Premium Moodgram',
+    freePromoTitle: 'Первым 30 пользователям — галочка бесплатно на 1 год',
+    freePromoDesc: 'Первые 30 зарегистрированных пользователей получают фирменную синюю галочку Moodgram бесплатно на 1 год.',
+    claimFreeBadge: 'Получить галочку на 1 год',
+    badgeActive: 'Официальная галочка Moodgram активна',
+    premiumTitle: 'Подписка Moodgram Verified',
+    premiumPrice: '$20 USD / год',
+    premiumDesc: 'Синяя галочка Moodgram рядом с вашим именем в постах, Mood, комментариях и чатах.',
+    subscribeNow: 'Оформить ($20/год)',
+    paymentPending: 'Ожидание подтверждения оплаты платёжным провайдером или администратором.',
+    appearance: 'Оформление',
+    dark: 'Тёмная',
+    light: 'Светлая',
+    language: 'Язык',
+    soundEffects: 'Звуки сообщений и уведомлений',
+    aboutApp: 'О Moodgram',
+    aboutDesc: 'Moodgram — современная социальная сеть от Matmusoevs, где живые эмоции (Mood) полностью заменяют ленту коротких видео.',
+    errConfig: 'Укажите ключи Firebase в коде index.html для подключения базы данных.',
+    errFields: 'Пожалуйста, заполните все обязательные поля.',
+    errPassMatch: 'Пароли не совпадают.',
+    errPassLen: 'Пароль должен содержать минимум 6 символов.',
+    errUsername: 'Username: 3–20 строчных латинских букв, цифр или _.',
+    errUserTaken: 'Этот @username уже занят.',
+    errUserNotFound: 'Аккаунт с таким @username не найден.',
+    errGeneric: 'Произошла ошибка. Попробуйте ещё раз.',
+    toastSaved: 'Изменения сохранены!',
+    toastPosted: 'Опубликовано в Moodgram!',
+    toastClaimed: 'Поздравляем! Ваша галочка Moodgram активирована на 1 год!',
+    logout: 'Выйти'
+  }
+};
+
+const MOOD_LIST = [
+  { emoji: '😊', en: 'Happy', ru: 'Счастлив' },
+  { emoji: '😔', en: 'Sad', ru: 'Грустно' },
+  { emoji: '😡', en: 'Angry', ru: 'Злой' },
+  { emoji: '🔥', en: 'Motivated', ru: 'Мотивирован' },
+  { emoji: '❤️', en: 'Grateful', ru: 'Благодарен' },
+  { emoji: '😎', en: 'Confident', ru: 'Уверен' },
+  { emoji: '😴', en: 'Tired', ru: 'Устал' },
+  { emoji: '🥰', en: 'Loved', ru: 'Влюблён' },
+  { emoji: '🤔', en: 'Thinking', ru: 'Задумался' },
+  { emoji: '🎉', en: 'Excited', ru: 'В восторге' }
+];
+
+let lang = localStorage.getItem('mg_lang') || 'en';
+let theme = localStorage.getItem('mg_theme') || 'dark';
+const tr = k => (T[lang] && T[lang][k]) || T.en[k] || k;
+
+/* ============================================================================
+   5. STATE & HELPERS
+   ============================================================================ */
+const state = {
+  user: null,
+  profile: null,
+  authMode: 'login',
+  regPhotoData: '',
+  tab: 'home',
+  viewUserId: null,
+  profilesCache: new Map(),
+  followingIds: [],
+  followerIds: [],
+  blockedIds: [],
+  posts: [],
+  moods: [],
+  stories: [],
+  notifs: [],
+  allUsers: [],
+  chatWith: null,
+  messages: [],
+  draftMsg: '',
+  searchQuery: '',
+  badgeCountUsed: 0,
+  busy: false,
+  error: '',
+  activeModal: null,
+  selectedMood: MOOD_LIST[0].emoji,
+  moodDraft: '',
+  editingMoodId: null,
+  postCaption: '',
+  postImageUrl: '',
+  postLocation: '',
+  postImageData: '',
+  openCommentsFor: null,
+  isRecording: false,
+  mediaRecorder: null,
+  audioChunks: [],
+  unsubs: [],
+  chatUnsub: null,
+  initialNotifsLoaded: false,
+  initialChatLoaded: false
+};
+
+const $ = id => document.getElementById(id);
+const esc = s => {
+  const d = document.createElement('div');
+  d.textContent = String(s ?? '');
+  return d.innerHTML.replace(/"/g, '"');
+};
+const pairId = (a, b) => [a, b].sort().join('_');
+const tsToMs = x => (x && x.createdAt && x.createdAt.toMillis) ? x.createdAt.toMillis() : Date.now();
+
+function timeAgo(ms) {
+  const diff = Math.max(0, Date.now() - ms);
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return lang === 'ru' ? 'только что' : 'just now';
+  if (mins < 60) return mins + 'm';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h';
+  return Math.floor(hrs / 24) + 'd';
+}
+
+/* ============================================================================
+   6. REALTIME ONLINE / OFFLINE PRESENCE ENGINE
+   ============================================================================ */
+let presenceTimer = null;
+
+function isUserTrulyOnline(u) {
+  if (!u || !u.online) return false;
+  if (!u.lastSeen || !u.lastSeen.toMillis) return !!u.online;
+  // Considered online only if heartbeat was received in last 50 seconds
+  return (Date.now() - u.lastSeen.toMillis()) < 50000;
+}
+
+function getPresenceLabel(u) {
+  if (isUserTrulyOnline(u)) {
+    return `<span class="inline-flex items-center gap-1.5 text-emerald-400 font-medium"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>${tr('online')}</span>`;
+  }
+  const seenMs = (u && u.lastSeen && u.lastSeen.toMillis) ? u.lastSeen.toMillis() : 0;
+  return `<span class="muted">${tr('offline')}${seenMs ? ' · ' + tr('lastSeen') + ' ' + timeAgo(seenMs) : ''}</span>`;
+}
+
+async function setPresence(isOnline) {
+  if (!db || !state.user) return;
+  try {
+    await db.collection('users').doc(state.user.uid).update({
+      online: isOnline,
+      lastSeen: TS()
+    });
+  } catch (_) {}
+}
+
+function startPresenceHeartbeat() {
+  stopPresenceHeartbeat();
+  setPresence(true);
+  presenceTimer = setInterval(() => {
+    if (document.visibilityState === 'visible') setPresence(true);
+  }, 25000);
+}
+
+function stopPresenceHeartbeat() {
+  if (presenceTimer) { clearInterval(presenceTimer); presenceTimer = null; }
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (!state.user || !state.profile) return;
+  if (document.visibilityState === 'hidden') setPresence(false);
+  else setPresence(true);
+});
+
+window.addEventListener('pagehide', () => { if (state.user) setPresence(false); });
+window.addEventListener('beforeunload', () => { if (state.user) setPresence(false); });
+
+function showToast(msg) {
+  const el = $('toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.opacity = '1';
+  el.style.transform = 'translate(-50%, 0)';
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transform = 'translate(-50%, 10px)';
+  }, 3000);
+}
+
+function logoSVG(sizeClass = 'w-9 h-9') {
+  return `
+    <div class="${sizeClass} rounded-2xl overflow-hidden grad p-[2px] shadow-lg shrink-0 relative inline-flex items-center justify-center">
+      <div class="w-full h-full rounded-[14px] overflow-hidden bg-[#0a0f24] flex items-center justify-center relative">
+        <img src="${APP_CONFIG.LOGO_PATH}" alt="Moodgram" class="w-full h-full object-cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+        <span style="display:none" class="w-full h-full items-center justify-center font-black text-white text-sm">MG</span>
+      </div>
+    </div>`;
+}
+
+function verificationBadge(userObj, size = 16) {
+  if (!userObj || !userObj.verified) return '';
+  if (userObj.badgeExpiresAt && userObj.badgeExpiresAt.toMillis && userObj.badgeExpiresAt.toMillis() < Date.now()) return '';
+  return `
+    <span title="Moodgram Verified" class="inline-flex items-center justify-center align-middle ml-1 shrink-0">
+      <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2L14.8 4.2L18.4 3.9L19.8 7.2L22.8 9.2L21.9 12.7L22.8 16.2L19.8 18.2L18.4 21.5L14.8 21.2L12 23.4L9.2 21.2L5.6 21.5L4.2 18.2L1.2 16.2L2.1 12.7L1.2 9.2L4.2 7.2L5.6 3.9L9.2 4.2L12 2Z" fill="#2563eb"/>
+        <path d="M8.5 12.3L10.8 14.6L15.6 9.6" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </span>`;
+}
+
+function avatarHTML(u, size = 'w-11 h-11', textSize = 'text-base', showOnlineDot = false) {
+  const onlineNow = showOnlineDot && isUserTrulyOnline(u);
+  const dot = onlineNow ? `<span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#0e1322]"></span>` : '';
+  if (u && u.photo) {
+    return `<div class="relative shrink-0 ${size}"><img src="${esc(u.photo)}" alt="" class="w-full h-full rounded-full object-cover border border-white/10">${dot}</div>`;
+  }
+  const name = (u && (u.firstName || u.name)) || '?';
+  const seed = [...((u && u.id) || name)].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
+  return `<div class="relative shrink-0 ${size} ${textSize} rounded-full flex items-center justify-center font-bold text-white" style="background:hsl(${seed},68%,46%)">${esc(name.charAt(0).toUpperCase())}${dot}</div>`;
+}
+
+function formatRichText(text) {
+  let safe = esc(text);
+  safe = safe.replace(/(#[a-zA-Z0-9_а-яА-ЯёЁ]+)/g, '<span class="text-blue-400 font-medium cursor-pointer" onclick="searchTag(\'$1\')">$1</span>');
+  safe = safe.replace(/(@[a-zA-Z0-9_]+)/g, '<span class="text-purple-400 font-medium">$1</span>');
+  return safe;
+}
+
+function compressImageFile(file, maxDim = 600, quality = 0.8) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+const getUser = uid => state.profilesCache.get(uid) || { id: uid, name: 'Moodgram User', username: 'user' };
+
+async function ensureProfiles(uids) {
+  const missing = [...new Set(uids)].filter(id => id && !state.profilesCache.has(id));
+  if (!missing.length || !db) return;
+  await Promise.all(missing.map(async id => {
+    try {
+      const doc = await db.collection('users').doc(id).get();
+      if (doc.exists) state.profilesCache.set(id, { id, ...doc.data() });
+    } catch (_) {}
+  }));
+  render();
+}
+
+/* ============================================================================
+   7. AUTHENTICATION
+   ============================================================================ */
+if (CONFIGURED && auth) {
+  auth.onAuthStateChanged(async user => {
+    state.user = user;
+    if (!user) {
+      stopPresenceHeartbeat();
+      cleanupSubscriptions();
+      state.profile = null;
+      state.authMode = 'login';
+      render();
+      return;
+    }
+    try {
+      const userDoc = await db.collection('users').doc(user.uid).get();
+      if (userDoc.exists) {
+        state.profile = { id: user.uid, ...userDoc.data() };
+        state.profilesCache.set(user.uid, state.profile);
+        if (state.profile.language && ['en', 'ru'].includes(state.profile.language)) {
+          lang = state.profile.language;
+          localStorage.setItem('mg_lang', lang);
+        }
+        startPresenceHeartbeat();
+        initRealtimeListeners();
+      } else {
+        state.profile = null;
+        state.authMode = 'complete_google';
+      }
+    } catch (err) { state.error = err.message; }
+    render();
+  });
+}
+
+async function handleRegPhotoSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+  state.regPhotoData = await compressImageFile(file, 300, 0.8);
+  render();
+}
+
+async function handleRegister(e) {
+  e.preventDefault();
+  const firstName = $('reg-fname').value.trim();
+  const lastName = $('reg-lname').value.trim();
+  const username = $('reg-user').value.trim().toLowerCase().replace(/^@/, '');
+  const email = $('reg-email').value.trim().toLowerCase();
+  const dob = $('reg-dob').value;
+  const prefLang = $('reg-lang').value;
+  const pass = $('reg-pass').value;
+  const confirm = $('reg-cpass').value;
+
+  if (!firstName || !lastName || !username || !email || !dob || !pass) { state.error = tr('errFields'); return render(); }
+  if (!/^[a-z0-9_]{3,20}$/.test(username)) { state.error = tr('errUsername'); return render(); }
+  if (pass.length < 6) { state.error = tr('errPassLen'); return render(); }
+  if (pass !== confirm) { state.error = tr('errPassMatch'); return render(); }
+
+  state.busy = true; state.error = ''; render();
+  try {
+    const unameDoc = await db.collection('usernames').doc(username).get();
+    if (unameDoc.exists) { state.busy = false; state.error = tr('errUserTaken'); return render(); }
+
+    const cred = await auth.createUserWithEmailAndPassword(email, pass);
+    const uid = cred.user.uid;
+    const fullName = firstName + ' ' + lastName;
+
+    await db.runTransaction(async tx => {
+      const uRef = db.collection('usernames').doc(username);
+      const promoRef = db.collection('meta').doc('badge_promo');
+      const uSnap = await tx.get(uRef);
+      if (uSnap.exists) throw new Error('USERNAME_TAKEN');
+
+      const pSnap = await tx.get(promoRef);
+      const allocated = pSnap.exists ? (pSnap.data().allocatedCount || 0) : 0;
+      const getsFreeBadge = allocated < APP_CONFIG.FREE_BADGE_LIMIT;
+      const oneYearFromNow = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000));
+
+      tx.set(uRef, { uid, email, createdAt: TS() });
+      if (getsFreeBadge) {
+        tx.set(promoRef, { allocatedCount: allocated + 1 }, { merge: true });
+        tx.set(db.collection('badge_allocations').doc(uid), { uid, type: 'free_first_30', allocatedAt: TS(), expiresAt: oneYearFromNow });
+      }
+      tx.set(db.collection('users').doc(uid), {
+        firstName, lastName, name: fullName, username, email, dob,
+        language: prefLang, bio: '', website: '', photo: state.regPhotoData || '',
+        isPrivate: false, verified: getsFreeBadge,
+        badgeType: getsFreeBadge ? 'free_first_30' : 'none',
+        badgeExpiresAt: getsFreeBadge ? oneYearFromNow : null,
+        savedPosts: [], online: true, lastSeen: TS(), createdAt: TS()
+      });
+    });
+
+    state.regPhotoData = '';
+    setLang(prefLang);
+    state.busy = false;
+  } catch (err) {
+    state.busy = false;
+    state.error = err.message === 'USERNAME_TAKEN' ? tr('errUserTaken') : (err.message || tr('errGeneric'));
+    render();
+  }
+}
+
+async function handleLogin(e) {
+  e.preventDefault();
+  const identifier = $('log-id').value.trim().toLowerCase();
+  const pass = $('log-pass').value;
+  if (!identifier || !pass) { state.error = tr('errFields'); return render(); }
+
+  state.busy = true; state.error = ''; render();
+  try {
+    let loginEmail = identifier;
+    if (!identifier.includes('@') || identifier.startsWith('@')) {
+      const cleanUser = identifier.replace(/^@/, '');
+      const mapDoc = await db.collection('usernames').doc(cleanUser).get();
+      if (!mapDoc.exists || !mapDoc.data().email) {
+        state.busy = false; state.error = tr('errUserNotFound'); return render();
+      }
+      loginEmail = mapDoc.data().email;
+    }
+    await auth.signInWithEmailAndPassword(loginEmail, pass);
+    state.busy = false;
+  } catch (err) {
+    state.busy = false;
+    state.error = err.message || tr('errGeneric');
+    render();
+  }
+}
+
+async function handleGoogleLogin() {
+  state.error = '';
+  try { await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
+  catch (err) { if (err.code !== 'auth/popup-closed-by-user') { state.error = err.message || tr('errGeneric'); render(); } }
+}
+
+async function handleCompleteGoogleProfile(e) {
+  e.preventDefault();
+  const username = $('g-username').value.trim().toLowerCase().replace(/^@/, '');
+  const firstName = $('g-fname').value.trim();
+  const lastName = $('g-lname').value.trim();
+  if (!/^[a-z0-9_]{3,20}$/.test(username)) { state.error = tr('errUsername'); return render(); }
+  if (!firstName) { state.error = tr('errFields'); return render(); }
+
+  state.busy = true; state.error = ''; render();
+  try {
+    const uid = state.user.uid;
+    const email = state.user.email || '';
+    await db.runTransaction(async tx => {
+      const uRef = db.collection('usernames').doc(username);
+      const promoRef = db.collection('meta').doc('badge_promo');
+      const uSnap = await tx.get(uRef);
+      if (uSnap.exists) throw new Error('USERNAME_TAKEN');
+
+      const pSnap = await tx.get(promoRef);
+      const allocated = pSnap.exists ? (pSnap.data().allocatedCount || 0) : 0;
+      const getsFreeBadge = allocated < APP_CONFIG.FREE_BADGE_LIMIT;
+      const oneYearFromNow = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000));
+
+      tx.set(uRef, { uid, email, createdAt: TS() });
+      if (getsFreeBadge) tx.set(promoRef, { allocatedCount: allocated + 1 }, { merge: true });
+      tx.set(db.collection('users').doc(uid), {
+        firstName, lastName, name: (firstName + ' ' + lastName).trim(),
+        username, email, language: lang, bio: '', website: '',
+        photo: state.user.photoURL || '', isPrivate: false,
+        verified: getsFreeBadge, badgeType: getsFreeBadge ? 'free_first_30' : 'none',
+        badgeExpiresAt: getsFreeBadge ? oneYearFromNow : null,
+        savedPosts: [], online: true, lastSeen: TS(), createdAt: TS()
+      });
+    });
+
+    const fresh = await db.collection('users').doc(uid).get();
+    state.profile = { id: uid, ...fresh.data() };
+    state.profilesCache.set(uid, state.profile);
+    state.busy = false;
+    startPresenceHeartbeat();
+    initRealtimeListeners();
+    render();
+  } catch (err) {
+    state.busy = false;
+    state.error = err.message === 'USERNAME_TAKEN' ? tr('errUserTaken') : tr('errGeneric');
+    render();
+  }
+}
+
+async function handleAccountRecovery(e) {
+  e.preventDefault();
+  const uname = $('rec-user').value.trim().toLowerCase().replace(/^@/, '');
+  if (!uname) { state.error = tr('errFields'); return render(); }
+  state.busy = true; state.error = ''; render();
+  try {
+    const doc = await db.collection('usernames').doc(uname).get();
+    if (doc.exists && doc.data().email) await auth.sendPasswordResetEmail(doc.data().email);
+  } catch (_) {}
+  state.busy = false;
+  showToast(tr('resetSent'));
+  state.authMode = 'login';
+  render();
+}
+
+async function logoutUser() {
+  stopPresenceHeartbeat();
+  await setPresence(false);
+  await auth.signOut();
+}
+
+/* ============================================================================
+   8. REALTIME LISTENERS (WITH SOUND TRIGGERS)
+   ============================================================================ */
+function addSub(unsub) { state.unsubs.push(unsub); }
+function cleanupSubscriptions() {
+  state.unsubs.forEach(fn => { try { fn(); } catch (_) {} });
+  state.unsubs = [];
+  if (state.chatUnsub) { state.chatUnsub(); state.chatUnsub = null; }
+}
+
+function initRealtimeListeners() {
+  cleanupSubscriptions();
+  state.initialNotifsLoaded = false;
+  const uid = state.user.uid;
+
+  addSub(db.collection('users').doc(uid).onSnapshot(doc => {
+    if (doc.exists) {
+      state.profile = { id: uid, ...doc.data() };
+      state.profilesCache.set(uid, state.profile);
+      render();
+    }
+  }));
+
+  addSub(db.collection('meta').doc('badge_promo').onSnapshot(doc => {
+    state.badgeCountUsed = doc.exists ? (doc.data().allocatedCount || 0) : 0;
+    render();
+  }));
+
+  addSub(db.collection('follows').where('followerId', '==', uid).onSnapshot(snap => {
+    state.followingIds = snap.docs.map(d => d.data().followingId);
+    ensureProfiles(state.followingIds);
+    render();
+  }));
+
+  addSub(db.collection('follows').where('followingId', '==', uid).onSnapshot(snap => {
+    state.followerIds = snap.docs.map(d => d.data().followerId);
+    ensureProfiles(state.followerIds);
+    render();
+  }));
+
+  addSub(db.collection('blocks').where('blockerId', '==', uid).onSnapshot(snap => {
+    state.blockedIds = snap.docs.map(d => d.data().blockedId);
+    render();
+  }));
+
+  addSub(db.collection('posts').orderBy('createdAt', 'desc').limit(60).onSnapshot(snap => {
+    state.posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    ensureProfiles(state.posts.map(p => p.uid));
+    render();
+  }));
+
+  addSub(db.collection('moods').orderBy('createdAt', 'desc').limit(80).onSnapshot(snap => {
+    state.moods = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    ensureProfiles(state.moods.map(m => m.uid));
+    render();
+  }));
+
+  addSub(db.collection('stories').orderBy('createdAt', 'desc').limit(30).onSnapshot(snap => {
+    const cutoff = Date.now() - 24 * 3600 * 1000;
+    state.stories = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(s => tsToMs(s) > cutoff);
+    ensureProfiles(state.stories.map(s => s.uid));
+    render();
+  }));
+
+  addSub(db.collection('notifications').doc(uid).collection('items').orderBy('createdAt', 'desc').limit(40).onSnapshot(snap => {
+    if (state.initialNotifsLoaded) {
+      snap.docChanges().forEach(change => {
+        if (change.type === 'added') {
+          const n = change.doc.data();
+          playSound(n.type === 'message' ? 'msg_in' : 'notif');
+          showToast('@' + getUser(n.fromUid).username + ' ' + n.text);
+        }
+      });
+    }
+    state.initialNotifsLoaded = true;
+    state.notifs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    ensureProfiles(state.notifs.map(n => n.fromUid));
+    render();
+  }));
+
+  addSub(db.collection('users').limit(50).onSnapshot(snap => {
+    state.allUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    state.allUsers.forEach(u => state.profilesCache.set(u.id, u));
+    render();
+  }));
+
+  watchIncomingCalls();
+}
+
+async function pushNotification(toUid, type, text, refId = '') {
+  if (!toUid || toUid === state.user.uid) return;
+  try {
+    await db.collection('notifications').doc(toUid).collection('items').add({
+      fromUid: state.user.uid, type, text, refId, read: false, createdAt: TS()
+    });
+  } catch (_) {}
+}
+
+/* ============================================================================
+   9. MOOD & POSTS ACTIONS
+   ============================================================================ */
+function openMoodComposer(existingMood = null) {
+  state.activeModal = 'mood';
+  if (existingMood) {
+    state.editingMoodId = existingMood.id;
+    state.selectedMood = existingMood.emoji;
+    state.moodDraft = existingMood.text;
+  } else {
+    state.editingMoodId = null;
+    state.selectedMood = MOOD_LIST[0].emoji;
+    state.moodDraft = '';
+  }
+  render();
+}
+
+async function saveMoodPost() {
+  const text = state.moodDraft.trim();
+  if (!text) return showToast(tr('errFields'));
+  const moodObj = MOOD_LIST.find(m => m.emoji === state.selectedMood) || MOOD_LIST[0];
+  try {
+    if (state.editingMoodId) {
+      await db.collection('moods').doc(state.editingMoodId).update({
+        emoji: state.selectedMood, moodLabel: moodObj.en, text, updatedAt: TS()
+      });
+    } else {
+      await db.collection('moods').add({
+        uid: state.user.uid, emoji: state.selectedMood, moodLabel: moodObj.en,
+        text, likes: [], comments: [], createdAt: TS()
+      });
+      await db.collection('users').doc(state.user.uid).update({
+        latestMood: { emoji: state.selectedMood, text, updatedAt: TS() }
+      });
+    }
+    state.activeModal = null; state.moodDraft = ''; state.editingMoodId = null;
+    playSound('msg_out');
+    showToast(tr('toastPosted'));
+    render();
+  } catch (err) { showToast(err.message || tr('errGeneric')); }
+}
+
+async function toggleMoodLike(moodId) {
+  const m = state.moods.find(x => x.id === moodId);
+  if (!m) return;
+  const liked = (m.likes || []).includes(state.user.uid);
+  await db.collection('moods').doc(moodId).update({
+    likes: liked ? FV().arrayRemove(state.user.uid) : FV().arrayUnion(state.user.uid)
+  });
+  if (!liked) pushNotification(m.uid, 'mood_like', 'liked your ' + m.emoji + ' Mood', moodId);
+}
+
+async function addMoodComment(moodId) {
+  const input = $('mcomm-' + moodId);
+  const text = input ? input.value.trim() : '';
+  if (!text) return;
+  const m = state.moods.find(x => x.id === moodId);
+  await db.collection('moods').doc(moodId).update({
+    comments: FV().arrayUnion({ uid: state.user.uid, text, createdAt: Date.now() })
+  });
+  if (m) pushNotification(m.uid, 'mood_comment', 'commented on your Mood: "' + text + '"', moodId);
+  input.value = '';
+}
+
+async function deleteMood(moodId) { await db.collection('moods').doc(moodId).delete(); }
+
+async function handlePostFileSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+  state.postImageData = await compressImageFile(file, 850, 0.82);
+  render();
+}
+
+async function publishPost() {
+  const caption = state.postCaption.trim();
+  const image = state.postImageData || state.postImageUrl.trim();
+  const location = state.postLocation.trim();
+  if (!caption && !image) return showToast(tr('errFields'));
+  const hashtags = (caption.match(/#[a-zA-Z0-9_а-яА-ЯёЁ]+/g) || []).map(t => t.toLowerCase());
+  try {
+    await db.collection('posts').add({
+      uid: state.user.uid, caption, image, location, hashtags,
+      likes: [], comments: [], createdAt: TS()
+    });
+    state.activeModal = null; state.postCaption = ''; state.postImageUrl = '';
+    state.postImageData = ''; state.postLocation = '';
+    playSound('msg_out');
+    showToast(tr('toastPosted'));
+    render();
+  } catch (err) { showToast(err.message || tr('errGeneric')); }
+}
+
+async function publishStory(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const dataUrl = await compressImageFile(file, 720, 0.8);
+  await db.collection('stories').add({ uid: state.user.uid, image: dataUrl, createdAt: TS() });
+  playSound('msg_out');
+  showToast(tr('toastPosted'));
+}
+
+async function togglePostLike(postId) {
+  const p = state.posts.find(x => x.id === postId);
+  if (!p) return;
+  const liked = (p.likes || []).includes(state.user.uid);
+  await db.collection('posts').doc(postId).update({
+    likes: liked ? FV().arrayRemove(state.user.uid) : FV().arrayUnion(state.user.uid)
+  });
+  if (!liked) pushNotification(p.uid, 'post_like', 'liked your post', postId);
+}
+
+async function addPostComment(postId) {
+  const input = $('pcomm-' + postId);
+  const text = input ? input.value.trim() : '';
+  if (!text) return;
+  const p = state.posts.find(x => x.id === postId);
+  await db.collection('posts').doc(postId).update({
+    comments: FV().arrayUnion({ uid: state.user.uid, text, createdAt: Date.now() })
+  });
+  if (p) pushNotification(p.uid, 'post_comment', 'commented: "' + text + '"', postId);
+  input.value = '';
+}
+
+async function toggleSavePost(postId) {
+  const saved = (state.profile.savedPosts || []).includes(postId);
+  await db.collection('users').doc(state.user.uid).update({
+    savedPosts: saved ? FV().arrayRemove(postId) : FV().arrayUnion(postId)
+  });
+}
+
+async function deletePost(postId) { await db.collection('posts').doc(postId).delete(); }
+
+async function toggleFollow(targetUid) {
+  if (targetUid === state.user.uid) return;
+  const docId = state.user.uid + '_' + targetUid;
+  const isFollowing = state.followingIds.includes(targetUid);
+  if (isFollowing) {
+    await db.collection('follows').doc(docId).delete();
+  } else {
+    await db.collection('follows').doc(docId).set({
+      followerId: state.user.uid, followingId: targetUid, createdAt: TS()
+    });
+    pushNotification(targetUid, 'follow', 'started following you');
+  }
+}
+
+/* ============================================================================
+   10. REALTIME MESSAGING + CALL LOGS SAVED IN CHAT
+   ============================================================================ */
+function openConversation(targetUid) {
+  state.tab = 'chats';
+  state.chatWith = targetUid;
+  state.initialChatLoaded = false;
+  if (state.chatUnsub) state.chatUnsub();
+
+  const cid = pairId(state.user.uid, targetUid);
+  state.chatUnsub = db.collection('conversations').doc(cid).collection('messages')
+    .orderBy('createdAt', 'asc')
+    .onSnapshot(snap => {
+      if (state.initialChatLoaded) {
+        snap.docChanges().forEach(c => {
+          if (c.type === 'added') {
+            const m = c.doc.data();
+            if (m.senderId !== state.user.uid) playSound('msg_in');
+          }
+        });
+      }
+      state.initialChatLoaded = true;
+      state.messages = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderMain();
+      const box = $('chat-scroll');
+      if (box) box.scrollTop = box.scrollHeight;
+    });
+  render();
+}
+
+async function sendChatMessage(e) {
+  if (e) e.preventDefault();
+  const text = state.draftMsg.trim();
+  if (!text || !state.chatWith) return;
+  const cid = pairId(state.user.uid, state.chatWith);
+  const convRef = db.collection('conversations').doc(cid);
+
+  state.draftMsg = '';
+  playSound('msg_out');
+  await convRef.set({ members: [state.user.uid, state.chatWith], lastMessage: text, updatedAt: TS() }, { merge: true });
+  await convRef.collection('messages').add({
+    senderId: state.user.uid, receiverId: state.chatWith, type: 'text', text, createdAt: TS()
+  });
+  pushNotification(state.chatWith, 'message', 'sent a message: ' + text.slice(0, 40));
+}
+
+async function sendChatImage(input) {
+  const file = input.files[0];
+  if (!file || !state.chatWith) return;
+  const imgData = await compressImageFile(file, 700, 0.78);
+  const cid = pairId(state.user.uid, state.chatWith);
+  playSound('msg_out');
+  await db.collection('conversations').doc(cid).collection('messages').add({
+    senderId: state.user.uid, receiverId: state.chatWith, type: 'image', image: imgData, text: 'Photo', createdAt: TS()
+  });
+}
+
+async function toggleVoiceRecording() {
+  if (state.isRecording && state.mediaRecorder) {
+    state.mediaRecorder.stop();
+    state.isRecording = false;
+    return render();
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    state.audioChunks = [];
+    const mr = new MediaRecorder(stream);
+    mr.ondataavailable = e => { if (e.data.size > 0) state.audioChunks.push(e.data); };
+    mr.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      const blob = new Blob(state.audioChunks, { type: 'audio/webm' });
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const cid = pairId(state.user.uid, state.chatWith);
+        playSound('msg_out');
+        await db.collection('conversations').doc(cid).collection('messages').add({
+          senderId: state.user.uid, receiverId: state.chatWith, type: 'audio', audio: reader.result, text: 'Voice message', createdAt: TS()
+        });
+      };
+      reader.readAsDataURL(blob);
+    };
+    mr.start();
+    state.mediaRecorder = mr;
+    state.isRecording = true;
+    render();
+  } catch (err) { showToast('Microphone permission required.'); }
+}
+
+// Save Call Record directly into the chat history
+async function logCallToChat(peerUid, callType, callStatus, durationSec = 0) {
+  if (!db || !state.user || !peerUid) return;
+  const cid = pairId(state.user.uid, peerUid);
+  const convRef = db.collection('conversations').doc(cid);
+  const m = String(Math.floor(durationSec / 60)).padStart(2, '0');
+  const s = String(durationSec % 60).padStart(2, '0');
+  const durText = durationSec > 0 ? `${m}:${s}` : '';
+  const summary = `${callType === 'video' ? 'Video Call' : 'Audio Call'} · ${callStatus}${durText ? ' (' + durText + ')' : ''}`;
+
+  try {
+    await convRef.set({ members: [state.user.uid, peerUid], lastMessage: summary, updatedAt: TS() }, { merge: true });
+    await convRef.collection('messages').add({
+      senderId: state.user.uid,
+      receiverId: peerUid,
+      type: 'call',
+      callType,
+      callStatus,
+      duration: durText,
+      text: summary,
+      createdAt: TS()
+    });
+  } catch (_) {}
+}
+
+const RTC_CONFIG = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+const rtcState = {
+  id: null, peerUid: null, callType: 'audio', isCaller: false, connected: false,
+  pc: null, local: null, remote: null, unsubs: [], timer: null, ringTimer: null, seconds: 0
+};
+
+function startCallTimer() {
+  rtcState.connected = true;
+  rtcState.seconds = 0;
+  clearInterval(rtcState.ringTimer);
+  clearInterval(rtcState.timer);
+  rtcState.timer = setInterval(() => {
+    rtcState.seconds++;
+    const m = String(Math.floor(rtcState.seconds / 60)).padStart(2, '0');
+    const s = String(rtcState.seconds % 60).padStart(2, '0');
+    const el = $('call-timer');
+    if (el) el.textContent = m + ':' + s;
+  }, 1000);
+}
+
+async function startWebRTCCall(targetUid, callType) {
+  if (rtcState.id) return;
+  const peer = getUser(targetUid);
+  const callRef = db.collection('calls').doc();
+  rtcState.id = callRef.id;
+  rtcState.peerUid = targetUid;
+  rtcState.callType = callType;
+  rtcState.isCaller = true;
+  rtcState.connected = false;
+  rtcState.seconds = 0;
+
+  try {
+    rtcState.local = await navigator.mediaDevices.getUserMedia({ audio: true, video: callType === 'video' });
+  } catch (err) {
+    rtcState.id = null;
+    return showToast('Camera/Microphone access denied.');
+  }
+  const pc = new RTCPeerConnection(RTC_CONFIG);
+  rtcState.pc = pc;
+  rtcState.remote = new MediaStream();
+  rtcState.local.getTracks().forEach(t => pc.addTrack(t, rtcState.local));
+  pc.ontrack = e => {
+    e.streams[0].getTracks().forEach(t => rtcState.remote.addTrack(t));
+    const rv = $('remote-video');
+    if (rv) rv.srcObject = rtcState.remote;
+  };
+  pc.onicecandidate = e => { if (e.candidate) callRef.collection('callerCandidates').add(e.candidate.toJSON()); };
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  await callRef.set({
+    callerId: state.user.uid, calleeId: targetUid, type: callType, status: 'ringing',
+    offer: { type: offer.type, sdp: offer.sdp }, createdAt: TS()
+  });
+  renderCallOverlay(peer, callType, tr('calling'), false);
+
+  rtcState.unsubs.push(callRef.onSnapshot(async snap => {
+    const data = snap.data();
+    if (!data) return;
+    if (['ended', 'declined'].includes(data.status)) return endWebRTCCall(false, data.status);
+    if (data.answer && !pc.currentRemoteDescription) {
+      await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+      startCallTimer();
+    }
+  }));
+  rtcState.unsubs.push(callRef.collection('calleeCandidates').onSnapshot(snap => {
+    snap.docChanges().forEach(c => { if (c.type === 'added') pc.addIceCandidate(new RTCIceCandidate(c.doc.data())); });
+  }));
+}
+
+function watchIncomingCalls() {
+  addSub(db.collection('calls').where('calleeId', '==', state.user.uid).where('status', '==', 'ringing').onSnapshot(snap => {
+    snap.docChanges().forEach(async c => {
+      if (c.type === 'added' && !rtcState.id) {
+        const data = c.doc.data();
+        rtcState.id = c.doc.id;
+        rtcState.peerUid = data.callerId;
+        rtcState.callType = data.type;
+        rtcState.isCaller = false;
+        rtcState.connected = false;
+        rtcState.seconds = 0;
+        await ensureProfiles([data.callerId]);
+        playSound('ring');
+        rtcState.ringTimer = setInterval(() => playSound('ring'), 2500);
+        renderCallOverlay(getUser(data.callerId), data.type, tr('incomingCall'), true);
+      }
+    });
+  }));
+}
+
+async function acceptIncomingCall() {
+  clearInterval(rtcState.ringTimer);
+  const callRef = db.collection('calls').doc(rtcState.id);
+  const data = (await callRef.get()).data();
+  if (!data) return;
+  rtcState.local = await navigator.mediaDevices.getUserMedia({ audio: true, video: data.type === 'video' });
+  const pc = new RTCPeerConnection(RTC_CONFIG);
+  rtcState.pc = pc;
+  rtcState.remote = new MediaStream();
+  rtcState.local.getTracks().forEach(t => pc.addTrack(t, rtcState.local));
+  pc.ontrack = e => {
+    e.streams[0].getTracks().forEach(t => rtcState.remote.addTrack(t));
+    const rv = $('remote-video');
+    if (rv) rv.srcObject = rtcState.remote;
+  };
+  pc.onicecandidate = e => { if (e.candidate) callRef.collection('calleeCandidates').add(e.candidate.toJSON()); };
+  await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+  const answer = await pc.createAnswer();
+  await pc.setLocalDescription(answer);
+  await callRef.update({ status: 'connected', answer: { type: answer.type, sdp: answer.sdp } });
+  renderCallOverlay(getUser(data.callerId), data.type, 'Connected', false);
+  startCallTimer();
+  rtcState.unsubs.push(callRef.collection('callerCandidates').onSnapshot(s => {
+    s.docChanges().forEach(c => { if (c.type === 'added') pc.addIceCandidate(new RTCIceCandidate(c.doc.data())); });
+  }));
+  rtcState.unsubs.push(callRef.onSnapshot(s => { if (s.data() && s.data().status === 'ended') endWebRTCCall(false, 'ended'); }));
+}
+
+async function endWebRTCCall(updateDb = true, remoteStatus = 'ended') {
+  const { id, peerUid, callType, isCaller, connected, seconds } = rtcState;
+  clearInterval(rtcState.timer);
+  clearInterval(rtcState.ringTimer);
+  rtcState.unsubs.forEach(u => u());
+  rtcState.unsubs = [];
+  if (rtcState.pc) { rtcState.pc.close(); rtcState.pc = null; }
+  if (rtcState.local) { rtcState.local.getTracks().forEach(t => t.stop()); rtcState.local = null; }
+  rtcState.id = null;
+  $('callroot').style.display = 'none';
+  $('callroot').innerHTML = '';
+
+  // Caller writes the call record into the chat conversation so both users see it
+  if (isCaller && peerUid) {
+    const finalStatus = connected ? 'Completed' : (remoteStatus === 'declined' ? 'Declined' : 'Missed');
+    await logCallToChat(peerUid, callType, finalStatus, seconds);
+  }
+
+  if (updateDb && id) {
+    try {
+      const st = (!isCaller && !connected) ? 'declined' : 'ended';
+      await db.collection('calls').doc(id).update({ status: st });
+    } catch (_) {}
+  }
+}
+
+function renderCallOverlay(peer, type, statusText, isIncoming) {
+  const root = $('callroot');
+  root.style.display = 'flex';
+  root.innerHTML = `
+    <div class="relative flex-1 flex flex-col items-center justify-center p-6">
+      <video id="remote-video" autoplay playsinline class="absolute inset-0 w-full h-full object-cover opacity-80"></video>
+      <video id="local-video" autoplay playsinline muted class="absolute top-5 right-5 w-28 h-40 rounded-2xl object-cover border border-white/20 z-10 ${type === 'video' ? '' : 'hidden'}"></video>
+      <div class="relative z-10 text-center space-y-3 bg-black/55 backdrop-blur-md px-8 py-6 rounded-3xl border border-white/10">
+        ${avatarHTML(peer, 'w-24 h-24 mx-auto', 'text-3xl')}
+        <h3 class="text-xl font-bold">${esc(peer.name)}</h3>
+        <p id="call-timer" class="text-sm text-blue-300 font-mono">${esc(statusText)}</p>
+      </div>
+    </div>
+    <div class="p-8 flex justify-center gap-8 bg-black/80 z-10">
+      ${isIncoming ? `
+        <button onclick="endWebRTCCall(true)" class="w-16 h-16 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-lg">✕</button>
+        <button onclick="acceptIncomingCall()" class="w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-lg">${ICONS.phone()}</button>
+      ` : `
+        <button onclick="endWebRTCCall(true)" class="w-16 h-16 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-lg">✕</button>
+      `}
+    </div>`;
+  const lv = $('local-video'); if (lv && rtcState.local) lv.srcObject = rtcState.local;
+  const rv = $('remote-video'); if (rv && rtcState.remote) rv.srcObject = rtcState.remote;
+}
+
+/* ============================================================================
+   11. VERIFICATION & SETTINGS
+   ============================================================================ */
+async function claimPromotionalBadge() {
+  const uid = state.user.uid;
+  try {
+    await db.runTransaction(async tx => {
+      const promoRef = db.collection('meta').doc('badge_promo');
+      const userRef = db.collection('users').doc(uid);
+      const allocRef = db.collection('badge_allocations').doc(uid);
+      const [pSnap, uSnap, aSnap] = await Promise.all([tx.get(promoRef), tx.get(userRef), tx.get(allocRef)]);
+      if (aSnap.exists || (uSnap.exists && uSnap.data().verified)) throw new Error('ALREADY_VERIFIED');
+      const count = pSnap.exists ? (pSnap.data().allocatedCount || 0) : 0;
+      if (count >= APP_CONFIG.FREE_BADGE_LIMIT) throw new Error('LIMIT_REACHED');
+      const expires = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + 365 * 24 * 3600 * 1000));
+      tx.set(promoRef, { allocatedCount: count + 1 }, { merge: true });
+      tx.set(allocRef, { uid, type: 'free_first_30', allocatedAt: TS(), expiresAt: expires });
+      tx.update(userRef, { verified: true, badgeType: 'free_first_30', badgeExpiresAt: expires });
+    });
+    playSound('notif');
+    showToast(tr('toastClaimed'));
+  } catch (err) {
+    showToast(err.message === 'LIMIT_REACHED' ? 'All 30 free badges have been claimed.' : tr('errGeneric'));
+  }
+}
+
+async function initiatePremiumSubscription() {
+  const txRef = $('pay-ref') ? $('pay-ref').value.trim() : '';
+  await db.collection('payment_records').add({
+    uid: state.user.uid, amountUsd: APP_CONFIG.PREMIUM_PRICE_USD, currency: 'USD',
+    provider: APP_CONFIG.PAYMENT_PROVIDER, reference: txRef || 'PENDING_GATEWAY_WEBHOOK',
+    status: 'pending_verification', createdAt: TS()
+  });
+  showToast(tr('paymentPending'));
+}
+
+async function updateProfileDetails(e) {
+  e.preventDefault();
+  const firstName = $('ep-fname').value.trim();
+  const lastName = $('ep-lname').value.trim();
+  const bio = $('ep-bio').value.trim();
+  const website = $('ep-web').value.trim();
+  const isPrivate = $('ep-priv').checked;
+  await db.collection('users').doc(state.user.uid).update({
+    firstName, lastName, name: (firstName + ' ' + lastName).trim(), bio, website, isPrivate
+  });
+  state.activeModal = null;
+  showToast(tr('toastSaved'));
+}
+
+async function updateAvatarPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const photo = await compressImageFile(file, 320, 0.85);
+  await db.collection('users').doc(state.user.uid).update({ photo });
+  showToast(tr('toastSaved'));
+}
+
+/* ============================================================================
+   12. UI VIEWS (INSTAGRAM-GRADE MODERN DESIGN)
+   ============================================================================ */
+function renderAuthScreen() {
+  if (!HAS_FIREBASE_SDK) {
+    return `<div class="card p-6 text-center space-y-3 my-12">${logoSVG('w-16 h-16 mx-auto')}<h2 class="text-xl font-bold">Connection Required</h2><p class="text-sm text-amber-400">Check your internet connection and reload.</p></div>`;
+  }
+  if (!CONFIGURED) {
+    return `<div class="card p-6 text-center space-y-4 my-12">${logoSVG('w-16 h-16 mx-auto')}<h2 class="text-xl font-bold">Moodgram Setup Required</h2><p class="text-sm text-amber-400 leading-relaxed">${tr('errConfig')}</p></div>`;
+  }
+  if (state.authMode === 'complete_google') {
+    const parts = (state.user.displayName || '').split(' ');
+    return `<div class="card p-6 space-y-4 my-8">
+      <div class="text-center space-y-2">${logoSVG('w-14 h-14 mx-auto')}<h2 class="text-xl font-bold">${tr('completeProfile')}</h2></div>
+      <form onsubmit="handleCompleteGoogleProfile(event)" class="space-y-3">
+        <input id="g-fname" value="${esc(parts[0] || '')}" placeholder="${tr('firstName')}" class="input" required>
+        <input id="g-lname" value="${esc(parts.slice(1).join(' '))}" placeholder="${tr('lastName')}" class="input">
+        <input id="g-username" placeholder="@username" class="input" required>
+        <button ${state.busy ? 'disabled' : ''} class="btn w-full py-3">${tr('saveProfile')}</button>
+      </form>
+      ${state.error ? `<p class="text-xs text-rose-400 text-center">${esc(state.error)}</p>` : ''}
+    </div>`;
+  }
+  if (state.authMode === 'recover') {
+    return `<div class="card p-6 space-y-4 my-8">
+      <div class="text-center space-y-2">${logoSVG('w-14 h-14 mx-auto')}<h2 class="text-xl font-bold">${tr('recoverTitle')}</h2><p class="text-xs muted">${tr('recoverHint')}</p></div>
+      <form onsubmit="handleAccountRecovery(event)" class="space-y-3">
+        <input id="rec-user" placeholder="@username" class="input" required>
+        <button ${state.busy ? 'disabled' : ''} class="btn w-full py-3">${tr('sendReset')}</button>
+      </form>
+      <button onclick="state.authMode='login';state.error='';render()" class="w-full text-xs muted">${tr('backToLogin')}</button>
+    </div>`;
+  }
+  if (state.authMode === 'register') {
+    return `<div class="card p-6 space-y-4 my-6">
+      <div class="text-center space-y-2">${logoSVG('w-14 h-14 mx-auto')}<h2 class="text-xl font-bold">${tr('registerTitle')}</h2></div>
+      <form onsubmit="handleRegister(event)" class="space-y-3">
+        <div class="flex items-center gap-3">
+          ${state.regPhotoData ? `<img src="${state.regPhotoData}" class="w-12 h-12 rounded-full object-cover shrink-0">` : `<div class="w-12 h-12 rounded-full soft flex items-center justify-center shrink-0">${ICONS.camera()}</div>`}
+          <label class="btn-ghost flex-1 text-center text-xs py-2.5 cursor-pointer">${tr('choosePhoto')}<input type="file" accept="image/*" hidden onchange="handleRegPhotoSelect(this)"></label>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <input id="reg-fname" placeholder="${tr('firstName')}" class="input" required>
+          <input id="reg-lname" placeholder="${tr('lastName')}" class="input" required>
+        </div>
+        <input id="reg-user" placeholder="@username" class="input" required>
+        <input id="reg-email" type="email" placeholder="Email" class="input" required>
+        <div class="grid grid-cols-2 gap-2">
+          <input id="reg-dob" type="date" class="input" required>
+          <select id="reg-lang" class="input"><option value="en" ${lang === 'en' ? 'selected' : ''}>English</option><option value="ru" ${lang === 'ru' ? 'selected' : ''}>Русский</option></select>
+        </div>
+        <input id="reg-pass" type="password" placeholder="${tr('password')}" class="input" required>
+        <input id="reg-cpass" type="password" placeholder="${tr('confirmPassword')}" class="input" required>
+        <button ${state.busy ? 'disabled' : ''} class="btn w-full py-3">${tr('createAccount')}</button>
+      </form>
+      ${state.error ? `<p class="text-xs text-rose-400 text-center">${esc(state.error)}</p>` : ''}
+      <button onclick="state.authMode='login';state.error='';render()" class="w-full text-xs text-blue-400 font-medium">${tr('haveAccount')}</button>
+    </div>`;
+  }
+  return `<div class="card p-6 space-y-4 my-8">
+    <div class="text-center space-y-2">${logoSVG('w-16 h-16 mx-auto')}<h1 class="text-2xl logo-text">Moodgram</h1><p class="text-xs muted">${tr('tagline')}</p></div>
+    <form onsubmit="handleLogin(event)" class="space-y-3">
+      <input id="log-id" placeholder="${tr('emailOrUser')}" class="input" required>
+      <input id="log-pass" type="password" placeholder="${tr('password')}" class="input" required>
+      <div class="text-right"><button type="button" onclick="state.authMode='recover';state.error='';render()" class="text-xs text-blue-400">${tr('forgotPass')}</button></div>
+      <button ${state.busy ? 'disabled' : ''} class="btn w-full py-3">${tr('signIn')}</button>
+    </form>
+    <div class="relative py-1 text-center"><span class="text-[11px] uppercase muted px-2">OR</span></div>
+    <button onclick="handleGoogleLogin()" class="btn-ghost w-full py-3 flex items-center justify-center gap-2"><b>G</b> ${tr('googleSignIn')}</button>
+    ${state.error ? `<p class="text-xs text-rose-400 text-center">${esc(state.error)}</p>` : ''}
+    <button onclick="state.authMode='register';state.error='';render()" class="w-full text-xs text-blue-400 font-medium pt-1">${tr('noAccount')}</button>
+  </div>`;
+}
+
+function renderHomeView() {
+  const storiesHTML = `
+    <div class="flex gap-3.5 overflow-x-auto hs pb-2">
+      <label class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer">
+        <div class="relative w-16 h-16">
+          ${avatarHTML(state.profile, 'w-16 h-16')}
+          <span class="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold border-2 border-[#060913]">+</span>
+        </div>
+        <span class="text-[11px] muted">${tr('addStory')}</span>
+        <input type="file" accept="image/*" hidden onchange="publishStory(this)">
+      </label>
+      ${state.stories.map(s => {
+        const u = getUser(s.uid);
+        return `<div onclick="viewStory('${s.id}')" class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer">
+          <div class="p-[2.5px] rounded-full ig-ring">${avatarHTML(u, 'w-[58px] h-[58px]')}</div>
+          <span class="text-[11px] muted truncate w-16 text-center">${esc(u.username || u.name)}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+
+  const quickBar = `
+    <div class="card p-3.5 flex items-center gap-3">
+      ${avatarHTML(state.profile, 'w-10 h-10', 'text-sm', true)}
+      <button onclick="openMoodComposer()" class="flex-1 text-left soft px-4 py-2.5 rounded-full text-xs muted">${tr('howFeeling')}</button>
+      <button onclick="state.activeModal='post';render()" class="btn px-3.5 py-2 text-xs">${ICONS.plusBox()} ${tr('newPost')}</button>
+    </div>`;
+
+  const visiblePosts = state.posts.filter(p => !state.blockedIds.includes(p.uid));
+  const postsHTML = visiblePosts.map(p => {
+    const author = getUser(p.uid);
+    const liked = (p.likes || []).includes(state.user.uid);
+    const saved = (state.profile.savedPosts || []).includes(p.id);
+    const isMine = p.uid === state.user.uid;
+    const commentsOpen = state.openCommentsFor === p.id;
+    return `
+      <article class="card overflow-hidden">
+        <div class="px-4 py-3 flex items-center gap-3">
+          <div onclick="openUserProfile('${p.uid}')" class="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
+            ${avatarHTML(author, 'w-10 h-10', 'text-sm', true)}
+            <div class="min-w-0">
+              <div class="font-semibold text-sm truncate flex items-center">${esc(author.username || author.name)}${verificationBadge(author)}</div>
+              <div class="text-[11px] muted truncate">${p.location ? esc(p.location) + ' · ' : ''}${timeAgo(tsToMs(p))}</div>
+            </div>
+          </div>
+          ${isMine ? `<button onclick="deletePost('${p.id}')" class="muted hover:text-rose-400 p-1">${ICONS.trash()}</button>` : ''}
+        </div>
+        ${p.image ? `<img src="${esc(p.image)}" alt="" ondblclick="togglePostLike('${p.id}')" class="w-full max-h-[500px] object-cover bg-black/30">` : ''}
+        <div class="p-4 space-y-2.5">
+          <div class="flex items-center gap-4">
+            <button onclick="togglePostLike('${p.id}')" class="icon-btn">${ICONS.heart(liked)}</button>
+            <button onclick="state.openCommentsFor = state.openCommentsFor==='${p.id}' ? null : '${p.id}'; render()" class="icon-btn">${ICONS.comment()}</button>
+            <button onclick="openConversation('${p.uid}')" class="icon-btn">${ICONS.share()}</button>
+            <button onclick="toggleSavePost('${p.id}')" class="icon-btn ml-auto">${ICONS.bookmark(saved)}</button>
+          </div>
+          ${(p.likes || []).length ? `<div class="text-xs font-bold">${(p.likes || []).length} ${lang === 'ru' ? 'отметок «Нравится»' : 'likes'}</div>` : ''}
+          ${p.caption ? `<p class="text-sm leading-relaxed"><span class="font-semibold mr-1.5">${esc(author.username)}</span>${formatRichText(p.caption)}</p>` : ''}
+          ${(p.comments || []).length && !commentsOpen ? `<button onclick="state.openCommentsFor='${p.id}';render()" class="text-xs muted block">${lang === 'ru' ? 'Посмотреть все комментарии' : 'View all'} (${(p.comments || []).length})</button>` : ''}
+          ${commentsOpen ? `
+            <div class="pt-2.5 border-t line space-y-2">
+              <div class="space-y-1.5 max-h-40 overflow-y-auto">
+                ${(p.comments || []).map(c => `<div class="text-xs"><span class="font-semibold">${esc(getUser(c.uid).username)}</span> ${esc(c.text)}</div>`).join('')}
+              </div>
+              <div class="flex gap-2">
+                <input id="pcomm-${p.id}" placeholder="${tr('addComment')}" class="input py-2 text-xs">
+                <button onclick="addPostComment('${p.id}')" class="btn py-2 px-3 text-xs">Post</button>
+              </div>
+            </div>` : ''}
+        </div>
+      </article>`;
+  }).join('');
+
+  return `<div class="space-y-4">${storiesHTML}${quickBar}${postsHTML || `<div class="card p-10 text-center text-sm muted">${tr('noPosts')}</div>`}</div>`;
+}
+
+function renderMoodTimelineView(onlyFriends = false) {
+  const list = state.moods.filter(m => !state.blockedIds.includes(m.uid) && (!onlyFriends || state.followingIds.includes(m.uid)));
+  return `<div class="space-y-4">
+    <div class="flex items-center justify-between">
+      <div><h2 class="text-xl font-bold">${onlyFriends ? tr('friendsMood') : tr('moodCenter')}</h2><p class="text-xs muted">${tr('howFeeling')}</p></div>
+      <div class="flex gap-2">
+        <button onclick="state.tab='mood';render()" class="px-3 py-1.5 rounded-xl text-xs font-semibold ${!onlyFriends ? 'btn' : 'btn-ghost'}">All</button>
+        <button onclick="state.tab='friends_mood';render()" class="px-3 py-1.5 rounded-xl text-xs font-semibold ${onlyFriends ? 'btn' : 'btn-ghost'}">${tr('friendsMood')}</button>
+      </div>
+    </div>
+    <div class="card p-4 flex items-center justify-between gap-3 border-blue-500/30">
+      <div class="flex items-center gap-3"><span class="text-3xl">😊</span><div><div class="text-sm font-semibold">${tr('howFeeling')}</div><div class="text-xs muted">Emoji + short thought.</div></div></div>
+      <button onclick="openMoodComposer()" class="btn shrink-0">+ ${tr('shareMood')}</button>
+    </div>
+    ${list.map(m => {
+      const author = getUser(m.uid);
+      const liked = (m.likes || []).includes(state.user.uid);
+      const isMine = m.uid === state.user.uid;
+      return `
+        <article class="card p-4 space-y-3">
+          <div class="flex items-center gap-3">
+            <div onclick="openUserProfile('${m.uid}')" class="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
+              ${avatarHTML(author, 'w-11 h-11', 'text-base', true)}
+              <div class="min-w-0">
+                <div class="font-semibold text-sm truncate flex items-center">${esc(author.name)}${verificationBadge(author)}</div>
+                <div class="text-xs muted">@${esc(author.username)} · ${timeAgo(tsToMs(m))}</div>
+              </div>
+            </div>
+            <div class="soft px-3 py-1.5 rounded-2xl flex items-center gap-1.5 border line">
+              <span class="text-2xl">${m.emoji}</span>
+              <span class="text-xs font-medium muted">${esc(m.moodLabel || '')}</span>
+            </div>
+          </div>
+          <p class="text-[15px] leading-relaxed font-medium pl-1">${formatRichText(m.text)}</p>
+          <div class="flex items-center gap-4 pt-2 border-t line text-xs">
+            <button onclick="toggleMoodLike('${m.id}')" class="icon-btn flex items-center gap-1.5 font-semibold">${ICONS.heart(liked)} <span>${(m.likes || []).length}</span></button>
+            <span class="flex items-center gap-1.5 muted">${ICONS.comment()} ${(m.comments || []).length}</span>
+            ${isMine ? `<button onclick="deleteMood('${m.id}')" class="ml-auto muted hover:text-rose-400">${ICONS.trash()}</button>` : `<button onclick="openConversation('${m.uid}')" class="ml-auto text-blue-400 font-semibold">Reply</button>`}
+          </div>
+          <div class="space-y-2 pt-1">
+            ${(m.comments || []).slice(-3).map(c => `<div class="soft px-3 py-1.5 rounded-xl text-xs"><span class="font-semibold">${esc(getUser(c.uid).username)}</span>: ${esc(c.text)}</div>`).join('')}
+            <div class="flex gap-2">
+              <input id="mcomm-${m.id}" placeholder="${tr('addComment')}" class="input py-1.5 text-xs">
+              <button onclick="addMoodComment('${m.id}')" class="btn py-1.5 px-3 text-xs">Post</button>
+            </div>
+          </div>
+        </article>`;
+    }).join('') || `<div class="card p-10 text-center text-sm muted">${onlyFriends ? tr('noFriendsMood') : tr('noMoods')}</div>`}
+  </div>`;
+}
+
+function searchTag(tag) { state.tab = 'explore'; state.searchQuery = tag; render(); }
+
+function handleExploreSearchInput(val) {
+  state.searchQuery = val;
+  const box = $('explore-results-box');
+  if (box) box.innerHTML = buildExploreResultsHTML();
+}
+
+function buildExploreResultsHTML() {
+  const q = state.searchQuery.trim().toLowerCase();
+  const cleanQ = q.replace(/^@/, '');
+  const matchingUsers = state.allUsers.filter(u => u.id !== state.user.uid && !state.blockedIds.includes(u.id) && (!q || (u.name || '').toLowerCase().includes(cleanQ) || (u.username || '').toLowerCase().includes(cleanQ))).slice(0, 20);
+  return `
+    <div class="space-y-2.5">
+      <div class="text-xs uppercase font-semibold muted">${tr('suggestedPeople')}</div>
+      ${matchingUsers.map(u => {
+        const isFollowing = state.followingIds.includes(u.id);
+        return `<div class="card p-3.5 flex items-center gap-3">
+          <div onclick="openUserProfile('${u.id}')" class="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
+            ${avatarHTML(u, 'w-11 h-11', 'text-base', true)}
+            <div class="min-w-0">
+              <div class="font-semibold text-sm truncate flex items-center">${esc(u.name)}${verificationBadge(u)}</div>
+              <div class="text-xs muted truncate">@${esc(u.username)} · ${getPresenceLabel(u)}</div>
+            </div>
+          </div>
+          <button onclick="toggleFollow('${u.id}')" class="${isFollowing ? 'btn-ghost' : 'btn'} text-xs py-2 px-3.5">${isFollowing ? tr('following') : tr('follow')}</button>
+        </div>`;
+      }).join('') || `<p class="text-sm muted text-center py-6">${tr('nobodyFound')}</p>`}
+    </div>`;
+}
+
+function renderExploreView() {
+  return `<div class="space-y-5">
+    <h2 class="text-xl font-bold">${tr('explore')}</h2>
+    <input id="explore-search" value="${esc(state.searchQuery)}" oninput="handleExploreSearchInput(this.value)" placeholder="${tr('searchPh')}" class="input">
+    <div id="explore-results-box" class="space-y-4">${buildExploreResultsHTML()}</div>
+  </div>`;
+}
+
+function renderChatsView() {
+  if (state.chatWith) {
+    const peer = getUser(state.chatWith);
+    return `
+      <div class="fixed inset-0 z-40 flex flex-col md:left-64 glass">
+        <div class="p-3.5 border-b line flex items-center gap-3">
+          <button onclick="state.chatWith=null;render()" class="text-xl px-2 muted">←</button>
+          <div onclick="openUserProfile('${peer.id}')" class="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer">
+            ${avatarHTML(peer, 'w-10 h-10', 'text-sm', true)}
+            <div class="min-w-0">
+              <div class="font-semibold text-sm truncate flex items-center">${esc(peer.name)}${verificationBadge(peer)}</div>
+              <div class="text-[11px]">${getPresenceLabel(peer)}</div>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="startWebRTCCall('${peer.id}', 'audio')" class="btn-ghost p-2.5 rounded-full icon-btn">${ICONS.phone()}</button>
+            <button onclick="startWebRTCCall('${peer.id}', 'video')" class="btn-ghost p-2.5 rounded-full icon-btn">${ICONS.video()}</button>
+          </div>
+        </div>
+        <div id="chat-scroll" class="flex-1 overflow-y-auto p-4 space-y-3">
+          ${state.messages.map(m => {
+            const mine = m.senderId === state.user.uid;
+            if (m.type === 'call') {
+              return `
+                <div class="flex justify-center my-2">
+                  <div class="card px-4 py-2.5 rounded-2xl flex items-center gap-3 text-xs border-blue-500/30">
+                    <span class="w-8 h-8 rounded-full soft flex items-center justify-center text-blue-400">
+                      ${m.callType === 'video' ? ICONS.video() : ICONS.phone()}
+                    </span>
+                    <div>
+                      <div class="font-semibold">${esc(m.text)}</div>
+                      <div class="text-[10px] muted">${timeAgo(tsToMs(m))}</div>
+                    </div>
+                  </div>
+                </div>`;
+            }
+            return `
+              <div class="flex flex-col ${mine ? 'items-end' : 'items-start'}">
+                <div class="max-w-[78%] px-3.5 py-2.5 rounded-2xl text-sm ${mine ? 'grad text-white' : 'card'}">
+                  ${m.type === 'image' && m.image ? `<img src="${esc(m.image)}" class="rounded-xl max-h-60 mb-1">` : ''}
+                  ${m.type === 'audio' && m.audio ? `<audio controls src="${esc(m.audio)}" class="max-w-[220px] h-9"></audio>` : ''}
+                  ${m.type === 'text' ? `<div class="break-words">${esc(m.text)}</div>` : ''}
+                  <div class="text-[10px] opacity-70 mt-1 text-right">${timeAgo(tsToMs(m))}</div>
+                </div>
+              </div>`;
+          }).join('')}
+        </div>
+        ${state.isRecording ? `<div class="px-4 py-2 bg-rose-600/20 text-rose-300 text-xs text-center">${tr('recording')}</div>` : ''}
+        <form onsubmit="sendChatMessage(event)" class="p-3 border-t line flex items-center gap-2">
+          <label class="btn-ghost p-2.5 rounded-full cursor-pointer icon-btn">${ICONS.camera()}<input type="file" accept="image/*" hidden onchange="sendChatImage(this)"></label>
+          <button type="button" onclick="toggleVoiceRecording()" class="btn-ghost p-2.5 rounded-full icon-btn ${state.isRecording ? 'bg-rose-600 text-white' : ''}">${ICONS.mic()}</button>
+          <input value="${esc(state.draftMsg)}" oninput="state.draftMsg=this.value" placeholder="${tr('typeMsg')}" class="input flex-1">
+          <button type="submit" class="btn px-4 py-2.5">${ICONS.share()}</button>
+        </form>
+      </div>`;
+  }
+  const chatPartners = [...new Set([...state.followingIds, ...state.followerIds])].filter(id => !state.blockedIds.includes(id));
+  return `<div class="space-y-4">
+    <h2 class="text-xl font-bold">${tr('messages')}</h2>
+    ${chatPartners.map(uid => {
+      const u = getUser(uid);
+      return `<button onclick="openConversation('${uid}')" class="card w-full p-3.5 flex items-center gap-3 text-left">
+        ${avatarHTML(u, 'w-12 h-12', 'text-base', true)}
+        <div class="flex-1 min-w-0">
+          <div class="font-semibold text-sm truncate flex items-center">${esc(u.name)}${verificationBadge(u)}</div>
+          <div class="text-xs truncate">@${esc(u.username)} · ${getPresenceLabel(u)}</div>
+        </div>
+        <span class="text-blue-400">${ICONS.chats(false)}</span>
+      </button>`;
+    }).join('') || `<div class="card p-10 text-center text-sm muted">${tr('noChats')}</div>`}
+  </div>`;
+}
+
+function renderProfileView(targetUid = null) {
+  const isMe = !targetUid || targetUid === state.user.uid;
+  const u = isMe ? state.profile : getUser(targetUid);
+  const userPosts = state.posts.filter(p => p.uid === u.id);
+  const userMoods = state.moods.filter(m => m.uid === u.id);
+  const isFollowing = state.followingIds.includes(u.id);
+  return `<div class="space-y-5">
+    <div class="card p-5 space-y-4">
+      <div class="flex items-start gap-4">
+        <div class="relative">
+          ${avatarHTML(u, 'w-20 h-20', 'text-2xl', true)}
+          ${isMe ? `<label class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full grad text-white flex items-center justify-center cursor-pointer">${ICONS.camera()}<input type="file" accept="image/*" hidden onchange="updateAvatarPhoto(this)"></label>` : ''}
+        </div>
+        <div class="flex-1 min-w-0 space-y-1">
+          <h2 class="text-lg font-bold truncate flex items-center">${esc(u.name)}${verificationBadge(u, 18)}</h2>
+          <p class="text-xs text-blue-400 font-medium">@${esc(u.username)} · ${getPresenceLabel(u)}</p>
+          ${u.bio ? `<p class="text-xs leading-relaxed pt-1">${esc(u.bio)}</p>` : ''}
+        </div>
+      </div>
+      <div class="grid grid-cols-3 text-center py-2.5 border-y line">
+        <div><div class="font-bold text-base">${userPosts.length}</div><div class="text-[11px] muted">${tr('allPosts')}</div></div>
+        <div><div class="font-bold text-base">${isMe ? state.followerIds.length : '—'}</div><div class="text-[11px] muted">${tr('followers')}</div></div>
+        <div><div class="font-bold text-base">${isMe ? state.followingIds.length : '—'}</div><div class="text-[11px] muted">${tr('following')}</div></div>
+      </div>
+      ${isMe ? `
+        <div class="flex gap-2">
+          <button onclick="state.activeModal='edit_profile';render()" class="btn-ghost flex-1 py-2 text-xs">${tr('editProfile')}</button>
+          <button onclick="state.tab='verification';render()" class="btn flex-1 py-2 text-xs">Verification</button>
+        </div>` : `
+        <div class="flex gap-2">
+          <button onclick="toggleFollow('${u.id}')" class="${isFollowing ? 'btn-ghost' : 'btn'} flex-1 py-2 text-xs">${isFollowing ? tr('following') : tr('follow')}</button>
+          <button onclick="openConversation('${u.id}')" class="btn-ghost flex-1 py-2 text-xs">Message</button>
+        </div>`}
+    </div>
+    <div class="space-y-3">
+      <div class="text-xs uppercase font-semibold muted">Mood History (${userMoods.length})</div>
+      ${userMoods.slice(0, 5).map(m => `<div class="card p-3 flex items-center gap-3"><span class="text-2xl">${m.emoji}</span><div class="flex-1 text-xs">${esc(m.text)}</div><span class="text-[11px] muted">${timeAgo(tsToMs(m))}</span></div>`).join('')}
+    </div>
+    <div class="grid grid-cols-3 gap-1.5">
+      ${userPosts.map(p => p.image ? `<img src="${esc(p.image)}" class="aspect-square object-cover rounded-xl">` : `<div class="aspect-square soft rounded-xl p-2 text-[11px] flex items-center justify-center text-center">${esc(p.caption)}</div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function openUserProfile(uid) {
+  if (uid === state.user.uid) { state.tab = 'profile'; state.viewUserId = null; }
+  else { state.tab = 'user_profile'; state.viewUserId = uid; }
+  render();
+}
+
+function renderVerificationView() {
+  const remaining = Math.max(0, APP_CONFIG.FREE_BADGE_LIMIT - state.badgeCountUsed);
+  const isVerified = !!state.profile.verified;
+  return `<div class="space-y-5">
+    <h2 class="text-xl font-bold">${tr('verificationTitle')}</h2>
+    ${isVerified ? `<div class="card p-5 border-blue-500/50 bg-blue-950/20 font-bold text-blue-400">✔ ${tr('badgeActive')}</div>` : ''}
+    <div class="card p-5 space-y-3">
+      <div class="flex items-center justify-between"><h3 class="font-bold text-sm text-blue-400">${tr('freePromoTitle')}</h3><span class="soft px-2.5 py-1 rounded-full text-xs font-bold">${remaining} / ${APP_CONFIG.FREE_BADGE_LIMIT}</span></div>
+      <p class="text-xs muted leading-relaxed">${tr('freePromoDesc')}</p>
+      ${!isVerified && remaining > 0 ? `<button onclick="claimPromotionalBadge()" class="btn w-full py-3">${tr('claimFreeBadge')}</button>` : ''}
+    </div>
+    <div class="card p-5 space-y-3">
+      <div class="flex items-center justify-between"><h3 class="font-bold text-sm">${tr('premiumTitle')}</h3><span class="text-sm font-extrabold text-purple-400">${tr('premiumPrice')}</span></div>
+      <p class="text-xs muted leading-relaxed">${tr('premiumDesc')}</p>
+      <input id="pay-ref" placeholder="Transaction / Receipt Reference" class="input text-xs">
+      <button onclick="initiatePremiumSubscription()" class="btn w-full py-3">${tr('subscribeNow')}</button>
+    </div>
+  </div>`;
+}
+
+function renderNotifsView() {
+  return `<div class="space-y-4">
+    <h2 class="text-xl font-bold">${tr('notifs')}</h2>
+    ${state.notifs.map(n => `<div class="card p-3.5 flex items-center gap-3">${avatarHTML(getUser(n.fromUid), 'w-10 h-10')}<div class="flex-1 text-xs"><span class="font-bold">@${esc(getUser(n.fromUid).username)}</span> ${esc(n.text)}</div><span class="text-[10px] muted">${timeAgo(tsToMs(n))}</span></div>`).join('') || `<div class="card p-10 text-center text-sm muted">No notifications yet.</div>`}
+  </div>`;
+}
+
+function toggleSoundEffects() {
+  soundEnabled = !soundEnabled;
+  localStorage.setItem('mg_sound', soundEnabled ? 'on' : 'off');
+  if (soundEnabled) playSound('notif');
+  render();
+}
+
+function renderSettingsView() {
+  return `<div class="space-y-5">
+    <h2 class="text-xl font-bold">${tr('settings')}</h2>
+    <div class="card p-4 space-y-4">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-semibold">${tr('soundEffects')}</span>
+        <button onclick="toggleSoundEffects()" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold ${soundEnabled ? 'btn' : 'btn-ghost'}">${soundEnabled ? 'ON' : 'OFF'}</button>
+      </div>
+      <div><div class="text-xs muted mb-2">${tr('language')}</div><div class="grid grid-cols-2 gap-2"><button onclick="setLang('en')" class="py-2 rounded-xl text-xs font-semibold ${lang==='en' ? 'btn' : 'btn-ghost'}">English</button><button onclick="setLang('ru')" class="py-2 rounded-xl text-xs font-semibold ${lang==='ru' ? 'btn' : 'btn-ghost'}">Русский</button></div></div>
+      <div><div class="text-xs muted mb-2">${tr('appearance')}</div><div class="grid grid-cols-2 gap-2"><button onclick="setTheme('dark')" class="py-2 rounded-xl text-xs font-semibold ${theme==='dark' ? 'btn' : 'btn-ghost'}">${tr('dark')}</button><button onclick="setTheme('light')" class="py-2 rounded-xl text-xs font-semibold ${theme==='light' ? 'btn' : 'btn-ghost'}">${tr('light')}</button></div></div>
+      <button onclick="state.tab='verification';render()" class="btn-ghost w-full py-2.5 text-xs flex items-center justify-between px-4"><span>${tr('verificationTitle')}</span><span>→</span></button>
+    </div>
+    <div class="card p-4 space-y-2 text-xs">
+      <div class="font-bold text-sm">${tr('aboutApp')}</div>
+      <p class="muted leading-relaxed">${tr('aboutDesc')}</p>
+      <div class="pt-2 border-t line flex justify-between muted font-medium"><span>Moodgram v3.0</span><span>${tr('byline')}</span></div>
+    </div>
+    <button onclick="logoutUser()" class="btn-ghost w-full py-3 text-rose-400 font-semibold">${tr('logout')}</button>
+  </div>`;
+}
+
+function renderModals() {
+  const root = $('modalroot');
+  if (!state.activeModal) { root.innerHTML = ''; return; }
+  if (state.activeModal === 'mood') {
+    root.innerHTML = `<div class="fixed inset-0 z-50 bg-black/70 flex items-end md:items-center justify-center p-0 md:p-4" onclick="if(event.target===this){state.activeModal=null;render()}">
+      <div class="card w-full md:max-w-md rounded-b-none md:rounded-3xl p-5 space-y-4">
+        <div class="flex justify-between items-center"><h3 class="font-bold text-base">${tr('shareMood')}</h3><button onclick="state.activeModal=null;render()" class="muted text-lg">✕</button></div>
+        <div class="grid grid-cols-5 gap-2">${MOOD_LIST.map(m => `<button onclick="state.selectedMood='${m.emoji}';render()" class="mood-chip mx-auto ${state.selectedMood===m.emoji ? 'on' : ''}">${m.emoji}</button>`).join('')}</div>
+        <textarea oninput="state.moodDraft=this.value" rows="3" maxlength="240" placeholder="${tr('moodExplainPh')}" class="input resize-none">${esc(state.moodDraft)}</textarea>
+        <button onclick="saveMoodPost()" class="btn w-full py-3">${tr('postMood')}</button>
+      </div>
+    </div>`;
+  } else if (state.activeModal === 'post') {
+    root.innerHTML = `<div class="fixed inset-0 z-50 bg-black/70 flex items-end md:items-center justify-center p-0 md:p-4" onclick="if(event.target===this){state.activeModal=null;render()}">
+      <div class="card w-full md:max-w-md rounded-b-none md:rounded-3xl p-5 space-y-3.5">
+        <div class="flex justify-between items-center"><h3 class="font-bold text-base">${tr('newPost')}</h3><button onclick="state.activeModal=null;render()" class="muted text-lg">✕</button></div>
+        <textarea oninput="state.postCaption=this.value" rows="3" placeholder="${tr('writeCaption')}" class="input resize-none">${esc(state.postCaption)}</textarea>
+        <input value="${esc(state.postLocation)}" oninput="state.postLocation=this.value" placeholder="${tr('locationPh')}" class="input text-xs">
+        <input value="${esc(state.postImageUrl)}" oninput="state.postImageUrl=this.value" placeholder="${tr('imageUrlPh')}" class="input text-xs">
+        <label class="btn-ghost w-full py-2.5 text-center flex items-center justify-center gap-2 cursor-pointer text-xs">${ICONS.camera()} Upload Photo<input type="file" accept="image/*" hidden onchange="handlePostFileSelect(this)"></label>
+        ${state.postImageData ? `<img src="${state.postImageData}" class="h-32 w-full object-cover rounded-xl">` : ''}
+        <button onclick="publishPost()" class="btn w-full py-3">${tr('publish')}</button>
+      </div>
+    </div>`;
+  } else if (state.activeModal === 'edit_profile') {
+    const p = state.profile;
+    root.innerHTML = `<div class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onclick="if(event.target===this){state.activeModal=null;render()}">
+      <form onsubmit="updateProfileDetails(event)" class="card w-full max-w-md p-5 space-y-3">
+        <div class="flex justify-between items-center"><h3 class="font-bold">${tr('editProfile')}</h3><button type="button" onclick="state.activeModal=null;render()" class="muted">✕</button></div>
+        <div class="grid grid-cols-2 gap-2"><input id="ep-fname" value="${esc(p.firstName || '')}" class="input" required><input id="ep-lname" value="${esc(p.lastName || '')}" class="input"></div>
+        <textarea id="ep-bio" rows="2" placeholder="${tr('bio')}" class="input">${esc(p.bio || '')}</textarea>
+        <input id="ep-web" value="${esc(p.website || '')}" placeholder="${tr('website')}" class="input">
+        <label class="flex items-center gap-2 text-xs pt-1"><input id="ep-priv" type="checkbox" ${p.isPrivate ? 'checked' : ''}><span>${tr('privateAccount')}</span></label>
+        <button type="submit" class="btn w-full py-3">Save Profile</button>
+      </form>
+    </div>`;
+  }
+}
+
+function viewStory(storyId) {
+  const s = state.stories.find(x => x.id === storyId);
+  if (!s) return;
+  const u = getUser(s.uid);
+  $('modalroot').innerHTML = `<div class="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center p-4" onclick="state.activeModal=null;renderModals()">
+    <div class="max-w-sm w-full space-y-3">
+      <div class="flex items-center gap-2.5 text-white">${avatarHTML(u, 'w-9 h-9')}<span class="font-semibold text-sm">@${esc(u.username)}</span></div>
+      <img src="${esc(s.image)}" class="w-full max-h-[75vh] object-contain rounded-2xl">
+    </div>
+  </div>`;
+}
+
+function setLang(newLang) {
+  lang = newLang;
+  localStorage.setItem('mg_lang', newLang);
+  if (db && state.user && state.profile) db.collection('users').doc(state.user.uid).update({ language: newLang }).catch(() => {});
+  render();
+}
+
+function setTheme(newTheme) {
+  theme = newTheme;
+  localStorage.setItem('mg_theme', newTheme);
+  document.documentElement.classList.toggle('light', newTheme === 'light');
+  render();
+}
+
+function renderChrome() {
+  const loggedIn = !!(state.user && state.profile);
+  const navItems = [
+    ['home', ICONS.home, tr('home')],
+    ['mood', ICONS.mood, tr('moodTab')],
+    ['explore', ICONS.explore, tr('explore')],
+    ['chats', ICONS.chats, tr('chats')],
+    ['notifs', ICONS.notifs, tr('notifs')],
+    ['profile', ICONS.profile, tr('profile')],
+    ['settings', ICONS.settings, tr('settings')]
+  ];
+
+  $('side').innerHTML = loggedIn ? `
+    <div class="flex items-center gap-3 px-2 py-3">${logoSVG('w-10 h-10')}<div><div class="text-xl logo-text leading-none">Moodgram</div><div class="text-[10px] muted mt-0.5">${tr('byline')}</div></div></div>
+    <div class="space-y-1 mt-4 flex-1">${navItems.map(([k, iconFn, label]) => {
+      const act = state.tab === k || (k === 'mood' && state.tab === 'friends_mood');
+      return `<button onclick="state.tab='${k}';state.chatWith=null;render()" class="w-full flex items-center gap-3.5 px-3.5 py-3 rounded-2xl text-sm transition ${act ? 'soft font-bold text-white border line' : 'muted hover:text-white'}">${iconFn(act)}<span>${label}</span></button>`;
+    }).join('')}</div>
+    <button onclick="openMoodComposer()" class="btn w-full py-3 mb-2">+ ${tr('shareMood')}</button>
+    <div class="text-[10px] text-center muted py-1">${tr('byline')}</div>` : '';
+
+  $('top').innerHTML = loggedIn ? `
+    <div class="flex items-center gap-2.5">${logoSVG('w-8 h-8')}<span class="text-xl logo-text">Moodgram</span></div>
+    <div class="flex items-center gap-4">
+      <button onclick="state.tab='notifs';render()" class="icon-btn">${ICONS.notifs(state.tab==='notifs')}</button>
+      <button onclick="state.tab='chats';state.chatWith=null;render()" class="icon-btn">${ICONS.chats(state.tab==='chats')}</button>
+      <button onclick="state.tab='settings';render()" class="icon-btn">${ICONS.settings(state.tab==='settings')}</button>
+    </div>` : '';
+
+  $('nav').innerHTML = loggedIn && !state.chatWith ? `
+    <button onclick="state.tab='home';render()" class="icon-btn flex-1 justify-center ${state.tab==='home'?'text-white':'muted'}">${ICONS.home(state.tab==='home')}</button>
+    <button onclick="state.tab='explore';render()" class="icon-btn flex-1 justify-center ${state.tab==='explore'?'text-white':'muted'}">${ICONS.explore(state.tab==='explore')}</button>
+    <button onclick="openMoodComposer()" class="icon-btn flex-1 justify-center">${ICONS.plusBox()}</button>
+    <button onclick="state.tab='mood';render()" class="icon-btn flex-1 justify-center ${state.tab==='mood'||state.tab==='friends_mood'?'text-white':'muted'}">${ICONS.mood(state.tab==='mood'||state.tab==='friends_mood')}</button>
+    <button onclick="state.tab='profile';render()" class="icon-btn flex-1 justify-center ${state.tab==='profile'?'text-white':'muted'}">${avatarHTML(state.profile, 'w-7 h-7')}</button>` : '';
+
+  $('side').classList.toggle('md:flex', loggedIn);
+  $('top').classList.toggle('hidden', !loggedIn);
+  $('nav').classList.toggle('hidden', !loggedIn || !!state.chatWith);
+}
+
+function renderMain() {
+  const loggedIn = !!(state.user && state.profile);
+  if (!loggedIn) {
+    $('main').className = 'px-4 max-w-md mx-auto min-h-screen flex flex-col justify-between';
+    $('main').innerHTML = `<div class="flex-1 flex flex-col justify-center">${renderAuthScreen()}</div><footer class="text-center py-5"><div class="text-[11px] uppercase tracking-widest muted font-semibold">${tr('byline')}</div></footer>`;
+    return;
+  }
+  $('main').className = 'px-4 py-4 pb-28 md:pb-10 md:ml-64 max-w-2xl mx-auto min-h-screen';
+  const routes = {
+    home: () => renderHomeView(),
+    mood: () => renderMoodTimelineView(false),
+    friends_mood: () => renderMoodTimelineView(true),
+    explore: () => renderExploreView(),
+    chats: () => renderChatsView(),
+    notifs: () => renderNotifsView(),
+    profile: () => renderProfileView(null),
+    user_profile: () => renderProfileView(state.viewUserId),
+    verification: () => renderVerificationView(),
+    settings: () => renderSettingsView()
+  };
+  $('main').innerHTML = (routes[state.tab] || routes.home)();
+}
+
+function render() {
+  document.documentElement.lang = lang;
+  document.documentElement.classList.toggle('light', theme === 'light');
+  renderChrome();
+  renderMain();
+  renderModals();
+}
+
+render();
+</script>
+</body>
+</html>
