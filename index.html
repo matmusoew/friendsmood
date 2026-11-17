@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Moodgram — Telegram & Instagram Hybrid</title>
+<title>Moodgram v5.0 — Clean & Fast</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -18,7 +18,7 @@
     --muted: #8390b4;
     --accent: #2563eb;
     --accent2: #7c3aed;
-    --neon: rgba(37, 99, 235, 0.2);
+    --neon: rgba(37, 99, 235, 0.22);
   }
   html.light {
     --bg: #f2f5fc;
@@ -41,7 +41,7 @@
     margin: 0;
   }
   .card { background: var(--card); border: 1px solid var(--border); border-radius: 22px; box-shadow: 0 4px 24px rgba(0,0,0,0.18); }
-  .glass { background: rgba(13, 18, 36, 0.88); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+  .glass { background: rgba(13, 18, 36, 0.9); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
   html.light .glass { background: rgba(255, 255, 255, 0.92); }
   .soft { background: var(--card2); }
   .muted { color: var(--muted); }
@@ -75,12 +75,17 @@
   .icon-btn { display: inline-flex; align-items: center; justify-content: center; transition: transform 0.15s; cursor: pointer; }
   .icon-btn:active { transform: scale(0.8); }
   .mood-chip {
-    font-size: 26px; width: 52px; height: 52px; border-radius: 16px; display: flex;
+    font-size: 28px; width: 54px; height: 54px; border-radius: 16px; display: flex;
     align-items: center; justify-content: center; border: 2px solid transparent; background: var(--card2); cursor: pointer;
   }
   .mood-chip.on { border-color: var(--accent); background: var(--neon); transform: scale(1.06); }
   #toast { transition: opacity 0.25s, transform 0.25s; }
-  .call-root { position: fixed; inset: 0; z-index: 90; background: #03050a; flex-direction: column; color: #fff; }
+  .call-root { position: fixed; inset: 0; z-index: 90; background: #050814; flex-direction: column; color: #fff; }
+  .note-bubble {
+    position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+    background: var(--card2); border: 1px solid var(--border); border-radius: 999px;
+    padding: 2px 8px; font-size: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); z-index: 5;
+  }
 </style>
 </head>
 <body class="min-h-screen">
@@ -124,7 +129,8 @@ const firebaseConfig = {
 const APP_CONFIG = {
   APP_NAME: "Moodgram",
   CREATOR: "Matmusoevs",
-  LOGO_PATH: "aps.jpg"
+  LOGO_PATH: "aps.jpg",
+  FREE_BADGE_LIMIT: 30
 };
 
 const HAS_FIREBASE_SDK = typeof firebase !== 'undefined';
@@ -143,7 +149,7 @@ const FV = () => firebase.firestore.FieldValue;
 const TS = () => FV().serverTimestamp();
 
 /* ============================================================================
-   2. INSTAGRAM SVG ICON SYSTEM
+   2. SVG ICONS
    ============================================================================ */
 const ICONS = {
   home: (act) => act ? `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M22 23h-6.001a1 1 0 0 1-1-1v-5.455a2.997 2.997 0 1 0-5.993 0V22a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V11.543a1.002 1.002 0 0 1 .31-.724l10-9.543a1.001 1.001 0 0 1 1.38 0l10 9.543a1.002 1.002 0 0 1 .31.724V22a1 1 0 0 1-1 1Z"/></svg>` : `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.005 16.545a2.997 2.997 0 0 1 2.997-2.997A2.997 2.997 0 0 1 15 16.545V22h7V11.543L12 2 2 11.543V22h7.005Z"/></svg>`,
@@ -159,15 +165,13 @@ const ICONS = {
   bookmark: (saved) => saved ? `<svg class="w-6 h-6 text-blue-400" viewBox="0 0 24 24" fill="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>` : `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`,
   plusBox: () => `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="5"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`,
   phone: () => `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`,
-  video: () => `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>`,
   mic: () => `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`,
-  camera: () => `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`,
-  trash: () => `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`,
-  edit: () => `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`
+  media: () => `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
+  trash: () => `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`
 };
 
 /* ============================================================================
-   3. SOUND SYNTHESIZER ENGINE (SMS, NOTIFICATION, RINGTONE)
+   3. AUDIO SYNTHESIZER (SMS, NOTIFICATION, CALL RINGTONE)
    ============================================================================ */
 let soundEnabled = localStorage.getItem('mg_sound') !== 'off';
 let audioCtx = null;
@@ -212,7 +216,7 @@ function playSound(type) {
       osc.frequency.setValueAtTime(523.25, now);
       osc.frequency.setValueAtTime(659.25, now + 0.15);
       osc.frequency.setValueAtTime(783.99, now + 0.3);
-      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.setValueAtTime(0.22, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
       osc.start(now); osc.stop(now + 0.55);
     }
@@ -220,12 +224,12 @@ function playSound(type) {
 }
 
 /* ============================================================================
-   4. LOCALIZATION (EN / RU)
+   4. LOCALIZATION & EMOJI NOTES DATA
    ============================================================================ */
 const T = {
   en: {
     byline: 'from matmusoevs team',
-    tagline: 'Express real emotions, share moments, and connect in real time.',
+    tagline: 'Share real emotions, stories with music, and connect safely.',
     loginTitle: 'Sign in to Moodgram',
     registerTitle: 'Create Moodgram Account',
     recoverTitle: 'Recover Account',
@@ -241,16 +245,16 @@ const T = {
     forgotPass: 'Forgot password?',
     noAccount: "Don't have an account? Register",
     haveAccount: 'Already have an account? Sign In',
-    recoverHint: 'Enter your Moodgram @username to receive a password reset link.',
+    recoverHint: 'Enter your @username to receive a password reset link.',
     sendReset: 'Send Recovery Link',
-    resetSent: 'If username exists, recovery link was sent to its email.',
+    resetSent: 'Recovery link sent to registered email.',
     backToLogin: 'Back to Login',
     completeProfile: 'Choose Your Moodgram Username',
     saveProfile: 'Complete Setup',
     home: 'Home',
     moodTab: 'Mood',
     friendsMood: 'Friends Mood',
-    explore: 'Explore',
+    explore: 'Search',
     chats: 'Messages',
     notifs: 'Notifications',
     profile: 'Profile',
@@ -258,8 +262,8 @@ const T = {
     addStory: 'Your Story',
     newPost: 'Create Post',
     shareMood: 'Share Mood',
-    writeCaption: 'Write a caption, use #hashtags or @mentions...',
-    imageUrlPh: 'Image URL or upload photo below',
+    writeCaption: 'Write a caption, #hashtags or @mentions...',
+    imageUrlPh: 'Image URL or upload file below',
     locationPh: 'Location (e.g., Dushanbe)',
     publish: 'Publish',
     addComment: 'Add a comment...',
@@ -270,7 +274,7 @@ const T = {
     moodExplainPh: 'Explain your mood in a few words...',
     postMood: 'Publish Mood',
     noMoods: 'No moods shared yet.',
-    noFriendsMood: 'None of your followed friends have posted a mood yet.',
+    noFriendsMood: 'None of your friends have posted a mood yet.',
     searchPh: 'Search @username or name...',
     suggestedPeople: 'Search Results',
     nobodyFound: 'No users found.',
@@ -285,27 +289,24 @@ const T = {
     typeMsg: 'Message...',
     online: 'Online',
     offline: 'Offline',
-    lastSeen: 'Last seen',
     recording: 'Recording audio...',
-    noChats: 'Open a profile or search to start messaging.',
+    noChats: 'Search for a friend to start messaging.',
     calling: 'Calling...',
-    incomingCall: 'Incoming Moodgram Call',
-    voiceCall: 'Audio Call',
-    videoCall: 'Video Call',
+    incomingCall: 'Incoming Moodgram Audio Call',
     appearance: 'Appearance',
     dark: 'Dark',
     light: 'Light',
     language: 'Language',
     soundEffects: 'Message & Call Sounds',
     aboutApp: 'About Moodgram',
-    aboutDesc: 'Moodgram — next-generation social platform created by Matmusoevs.',
+    aboutDesc: 'Moodgram v5.0 — fast, private social & messenger app by Matmusoevs.',
     logout: 'Log Out',
-    editMessage: 'Edit Message',
-    deleteMessage: 'Delete Message'
+    emojiNote: 'Emoji Note',
+    setEmojiNote: 'Pick an Emoji Note (24h)'
   },
   ru: {
     byline: 'from matmusoevs team',
-    tagline: 'Делитесь настоящими эмоциями и общайтесь в реальном времени.',
+    tagline: 'Делитесь эмоциями, историями с музыкой и общайтесь безопасно.',
     loginTitle: 'Вход в Moodgram',
     registerTitle: 'Регистрация в Moodgram',
     recoverTitle: 'Восстановление аккаунта',
@@ -321,16 +322,16 @@ const T = {
     forgotPass: 'Забыли пароль?',
     noAccount: 'Нет аккаунта? Зарегистрироваться',
     haveAccount: 'Уже есть аккаунт? Войти',
-    recoverHint: 'Введите ваш @username в Moodgram для сброса пароля.',
+    recoverHint: 'Введите ваш @username для сброса пароля.',
     sendReset: 'Отправить ссылку',
     resetSent: 'Ссылка для сброса отправлена на почту.',
     backToLogin: 'Назад ко входу',
     completeProfile: 'Выберите уникальный @username',
-    saveProfile: 'Завершить настройку',
+    saveProfile: 'Завершить',
     home: 'Лента',
     moodTab: 'Mood',
     friendsMood: 'Настроение друзей',
-    explore: 'Обзор',
+    explore: 'Поиск',
     chats: 'Сообщения',
     notifs: 'Уведомления',
     profile: 'Профиль',
@@ -350,8 +351,8 @@ const T = {
     moodExplainPh: 'Опишите своё настроение...',
     postMood: 'Опубликовать Mood',
     noMoods: 'Записей Mood пока нет.',
-    noFriendsMood: 'Ваши друзья ещё не опубликовали настроение.',
-    searchPh: 'Введите @username или имя для поиска...',
+    noFriendsMood: 'Друзья ещё не опубликовали настроение.',
+    searchPh: 'Введите @username или имя...',
     suggestedPeople: 'Результаты поиска',
     nobodyFound: 'Пользователи не найдены.',
     follow: 'Подписаться',
@@ -365,25 +366,24 @@ const T = {
     typeMsg: 'Сообщение...',
     online: 'В сети',
     offline: 'Не в сети',
-    lastSeen: 'Был(а) в сети',
     recording: 'Идет запись...',
-    noChats: 'Найдите пользователя или откройте профиль, чтобы написать.',
-    calling: 'Вызов...',
-    incomingCall: 'Входящий звонок Moodgram',
-    voiceCall: 'Аудиозвонок',
-    videoCall: 'Видеозвонок',
+    noChats: 'Найдите друга через поиск, чтобы написать.',
+    calling: 'Аудиозвонок...',
+    incomingCall: 'Входящий аудиозвонок Moodgram',
     appearance: 'Оформление',
     dark: 'Тёмная',
     light: 'Светлая',
     language: 'Язык',
     soundEffects: 'Звуки сообщений и звонков',
     aboutApp: 'О Moodgram',
-    aboutDesc: 'Moodgram — социальная сеть нового поколения от Matmusoevs.',
+    aboutDesc: 'Moodgram v5.0 — быстрая и безопасная социальная сеть от Matmusoevs.',
     logout: 'Выйти',
-    editMessage: 'Изменить',
-    deleteMessage: 'Удалить'
+    emojiNote: 'Заметка',
+    setEmojiNote: 'Выберите эмодзи-заметку (24ч)'
   }
 };
+
+const NOTE_EMOJIS = ['😊','🔥','❤️','😎','😴','🥰','🥳','🤔','🎧','☕','✈️','💻','💪','🌧️','🌙','✨'];
 
 const MOOD_LIST = [
   { emoji: '😊', en: 'Happy', ru: 'Счастлив' },
@@ -401,7 +401,7 @@ let theme = localStorage.getItem('mg_theme') || 'dark';
 const tr = k => (T[lang] && T[lang][k]) || T.en[k] || k;
 
 /* ============================================================================
-   5. STATE & STATE PERSISTENCE
+   5. STATE & PERSISTENCE
    ============================================================================ */
 const state = {
   user: null,
@@ -417,6 +417,7 @@ const state = {
   posts: [],
   moods: [],
   stories: [],
+  notes: [],
   notifs: [],
   allUsers: [],
   chatWith: null,
@@ -433,7 +434,6 @@ const state = {
   postImageUrl: '',
   postLocation: '',
   postImageData: '',
-  storyMusic: '',
   openCommentsFor: null,
   isRecording: false,
   mediaRecorder: null,
@@ -464,7 +464,7 @@ function timeAgo(ms) {
 }
 
 /* ============================================================================
-   6. REALTIME ONLINE / OFFLINE PRESENCE SYSTEM
+   6. PRESENCE SYSTEM
    ============================================================================ */
 let presenceTimer = null;
 
@@ -532,7 +532,7 @@ function logoSVG(sizeClass = 'w-9 h-9') {
 function verificationBadge(userObj, size = 16) {
   if (!userObj || !userObj.verified) return '';
   return `
-    <span title="Moodgram Verified" class="inline-flex items-center justify-center align-middle ml-1 shrink-0">
+    <span title="Moodgram Verified (Early 30 Member)" class="inline-flex items-center justify-center align-middle ml-1 shrink-0">
       <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none">
         <path d="M12 2L14.8 4.2L18.4 3.9L19.8 7.2L22.8 9.2L21.9 12.7L22.8 16.2L19.8 18.2L18.4 21.5L14.8 21.2L12 23.4L9.2 21.2L5.6 21.5L4.2 18.2L1.2 16.2L2.1 12.7L1.2 9.2L4.2 7.2L5.6 3.9L9.2 4.2L12 2Z" fill="#2563eb"/>
         <path d="M8.5 12.3L10.8 14.6L15.6 9.6" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -579,6 +579,19 @@ function compressImageFile(file, maxDim = 600, quality = 0.8) {
   });
 }
 
+function readMediaFileAsDataURL(file, maxMB = 8) {
+  return new Promise((resolve, reject) => {
+    if (file.size > maxMB * 1024 * 1024) {
+      reject(new Error(`File too large (max ${maxMB}MB)`));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 const getUser = uid => state.profilesCache.get(uid) || { id: uid, name: 'Moodgram User', username: 'user' };
 
 async function ensureProfiles(uids) {
@@ -594,7 +607,29 @@ async function ensureProfiles(uids) {
 }
 
 /* ============================================================================
-   7. AUTHENTICATION & PERSISTENCE
+   7. FIRST 30 USERS AUTOMATIC VERIFIED BADGE ALLOCATION
+   ============================================================================ */
+async function claimEarlyBadge(uid) {
+  const promoRef = db.collection('meta').doc('badge_promo');
+  const allocRef = db.collection('badge_allocations').doc(uid);
+  try {
+    return await db.runTransaction(async tx => {
+      const allocSnap = await tx.get(allocRef);
+      if (allocSnap.exists) return true;
+      const promoSnap = await tx.get(promoRef);
+      const currentCount = promoSnap.exists ? (promoSnap.data().count || 0) : 0;
+      if (currentCount >= APP_CONFIG.FREE_BADGE_LIMIT) return false;
+      tx.set(promoRef, { count: currentCount + 1, updatedAt: TS() }, { merge: true });
+      tx.set(allocRef, { uid, slot: currentCount + 1, grantedAt: TS() });
+      return true;
+    });
+  } catch (_) {
+    return false;
+  }
+}
+
+/* ============================================================================
+   8. AUTHENTICATION & ACCOUNT RECOVERY
    ============================================================================ */
 if (CONFIGURED && auth) {
   auth.onAuthStateChanged(async user => {
@@ -645,35 +680,37 @@ async function handleRegister(e) {
   const pass = $('reg-pass').value;
   const confirm = $('reg-cpass').value;
 
-  if (!firstName || !lastName || !username || !email || !dob || !pass) { state.error = tr('errFields'); return render(); }
-  if (!/^[a-z0-9_]{3,20}$/.test(username)) { state.error = tr('errUsername'); return render(); }
-  if (pass.length < 6) { state.error = tr('errPassLen'); return render(); }
-  if (pass !== confirm) { state.error = tr('errPassMatch'); return render(); }
+  if (!firstName || !lastName || !username || !email || !dob || !pass) { state.error = 'Fill all fields'; return render(); }
+  if (!/^[a-z0-9_]{3,20}$/.test(username)) { state.error = 'Username: 3-20 lowercase letters, numbers or _'; return render(); }
+  if (pass.length < 6) { state.error = 'Password must be at least 6 characters'; return render(); }
+  if (pass !== confirm) { state.error = 'Passwords do not match'; return render(); }
 
   state.busy = true; state.error = ''; render();
   try {
     const unameDoc = await db.collection('usernames').doc(username).get();
-    if (unameDoc.exists) { state.busy = false; state.error = tr('errUserTaken'); return render(); }
+    if (unameDoc.exists) { state.busy = false; state.error = 'Username is already taken'; return render(); }
 
     const cred = await auth.createUserWithEmailAndPassword(email, pass);
     const uid = cred.user.uid;
     const fullName = firstName + ' ' + lastName;
+    const gotEarlyBadge = await claimEarlyBadge(uid);
 
     await db.runTransaction(async tx => {
       tx.set(db.collection('usernames').doc(username), { uid, email, createdAt: TS() });
       tx.set(db.collection('users').doc(uid), {
         firstName, lastName, name: fullName, username, email, dob,
         language: prefLang, bio: '', website: '', photo: state.regPhotoData || '',
-        isPrivate: false, verified: false, savedPosts: [], online: true, lastSeen: TS(), createdAt: TS()
+        isPrivate: false, verified: gotEarlyBadge, savedPosts: [], online: true, lastSeen: TS(), createdAt: TS()
       });
     });
 
+    if (gotEarlyBadge) showToast('🎉 You are among the first 30 users! Verified badge granted.');
     state.regPhotoData = '';
     setLang(prefLang);
     state.busy = false;
   } catch (err) {
     state.busy = false;
-    state.error = err.message === 'USERNAME_TAKEN' ? tr('errUserTaken') : (err.message || tr('errGeneric'));
+    state.error = err.message || 'Registration failed';
     render();
   }
 }
@@ -682,7 +719,7 @@ async function handleLogin(e) {
   e.preventDefault();
   const identifier = $('log-id').value.trim().toLowerCase();
   const pass = $('log-pass').value;
-  if (!identifier || !pass) { state.error = tr('errFields'); return render(); }
+  if (!identifier || !pass) { state.error = 'Fill all fields'; return render(); }
 
   state.busy = true; state.error = ''; render();
   try {
@@ -691,7 +728,7 @@ async function handleLogin(e) {
       const cleanUser = identifier.replace(/^@/, '');
       const mapDoc = await db.collection('usernames').doc(cleanUser).get();
       if (!mapDoc.exists || !mapDoc.data().email) {
-        state.busy = false; state.error = tr('errUserNotFound'); return render();
+        state.busy = false; state.error = 'User not found'; return render();
       }
       loginEmail = mapDoc.data().email;
     }
@@ -699,7 +736,7 @@ async function handleLogin(e) {
     state.busy = false;
   } catch (err) {
     state.busy = false;
-    state.error = err.message || tr('errGeneric');
+    state.error = err.message || 'Login failed';
     render();
   }
 }
@@ -707,7 +744,7 @@ async function handleLogin(e) {
 async function handleGoogleLogin() {
   state.error = '';
   try { await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
-  catch (err) { if (err.code !== 'auth/popup-closed-by-user') { state.error = err.message || tr('errGeneric'); render(); } }
+  catch (err) { if (err.code !== 'auth/popup-closed-by-user') { state.error = err.message; render(); } }
 }
 
 async function handleCompleteGoogleProfile(e) {
@@ -715,23 +752,26 @@ async function handleCompleteGoogleProfile(e) {
   const username = $('g-username').value.trim().toLowerCase().replace(/^@/, '');
   const firstName = $('g-fname').value.trim();
   const lastName = $('g-lname').value.trim();
-  if (!/^[a-z0-9_]{3,20}$/.test(username)) { state.error = tr('errUsername'); return render(); }
-  if (!firstName) { state.error = tr('errFields'); return render(); }
+  if (!/^[a-z0-9_]{3,20}$/.test(username)) { state.error = 'Invalid username format'; return render(); }
+  if (!firstName) { state.error = 'First name is required'; return render(); }
 
   state.busy = true; state.error = ''; render();
   try {
     const uid = state.user.uid;
     const email = state.user.email || '';
+    const gotEarlyBadge = await claimEarlyBadge(uid);
+
     await db.runTransaction(async tx => {
       tx.set(db.collection('usernames').doc(username), { uid, email, createdAt: TS() });
       tx.set(db.collection('users').doc(uid), {
         firstName, lastName, name: (firstName + ' ' + lastName).trim(),
         username, email, language: lang, bio: '', website: '',
-        photo: state.user.photoURL || '', isPrivate: false, verified: false,
+        photo: state.user.photoURL || '', isPrivate: false, verified: gotEarlyBadge,
         savedPosts: [], online: true, lastSeen: TS(), createdAt: TS()
       });
     });
 
+    if (gotEarlyBadge) showToast('🎉 Early 30 Verified Badge granted!');
     const fresh = await db.collection('users').doc(uid).get();
     state.profile = { id: uid, ...fresh.data() };
     state.profilesCache.set(uid, state.profile);
@@ -741,7 +781,7 @@ async function handleCompleteGoogleProfile(e) {
     render();
   } catch (err) {
     state.busy = false;
-    state.error = err.message === 'USERNAME_TAKEN' ? tr('errUserTaken') : tr('errGeneric');
+    state.error = err.message || 'Error completing setup';
     render();
   }
 }
@@ -749,8 +789,8 @@ async function handleCompleteGoogleProfile(e) {
 async function handleAccountRecovery(e) {
   e.preventDefault();
   const uname = $('rec-user').value.trim().toLowerCase().replace(/^@/, '');
-  if (!uname) { state.error = tr('errFields'); return render(); }
-  state.busy = true; state.error = ''; render();
+  if (!uname) return;
+  state.busy = true; render();
   try {
     const doc = await db.collection('usernames').doc(uname).get();
     if (doc.exists && doc.data().email) await auth.sendPasswordResetEmail(doc.data().email);
@@ -768,7 +808,7 @@ async function logoutUser() {
 }
 
 /* ============================================================================
-   8. REALTIME LISTENERS & SOUNDS
+   9. REALTIME LISTENERS
    ============================================================================ */
 function addSub(unsub) { state.unsubs.push(unsub); }
 function cleanupSubscriptions() {
@@ -826,6 +866,13 @@ function initRealtimeListeners() {
     render();
   }));
 
+  addSub(db.collection('notes').orderBy('createdAt', 'desc').limit(40).onSnapshot(snap => {
+    const cutoff = Date.now() - 24 * 3600 * 1000;
+    state.notes = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(n => tsToMs(n) > cutoff);
+    ensureProfiles(state.notes.map(n => n.uid));
+    render();
+  }));
+
   addSub(db.collection('notifications').doc(uid).collection('items').orderBy('createdAt', 'desc').limit(40).onSnapshot(snap => {
     if (state.initialNotifsLoaded) {
       snap.docChanges().forEach(change => {
@@ -842,7 +889,7 @@ function initRealtimeListeners() {
     render();
   }));
 
-  addSub(db.collection('users').limit(60).onSnapshot(snap => {
+  addSub(db.collection('users').limit(80).onSnapshot(snap => {
     state.allUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     state.allUsers.forEach(u => state.profilesCache.set(u.id, u));
     render();
@@ -861,34 +908,71 @@ async function pushNotification(toUid, type, text, refId = '') {
 }
 
 /* ============================================================================
-   9. POSTS, MOODS & STORIES ACTIONS
+   10. EMOJI-ONLY ZAMETKA (NOTES), STORIES (PHOTO/VIDEO + MUSIC), POSTS, MOODS
    ============================================================================ */
-function openMoodComposer(existingMood = null) {
-  state.activeModal = 'mood';
-  if (existingMood) {
-    state.selectedMood = existingMood.emoji;
-    state.moodDraft = existingMood.text;
-  } else {
-    state.selectedMood = MOOD_LIST[0].emoji;
-    state.moodDraft = '';
+async function saveEmojiNote(emoji) {
+  if (!NOTE_EMOJIS.includes(emoji)) return;
+  try {
+    await db.collection('notes').doc(state.user.uid).set({
+      uid: state.user.uid, emoji, createdAt: TS()
+    });
+    state.activeModal = null;
+    playSound('msg_out');
+    showToast('Emoji note updated: ' + emoji);
+    render();
+  } catch (err) { showToast(err.message); }
+}
+
+async function deleteEmojiNote() {
+  await db.collection('notes').doc(state.user.uid).delete();
+  state.activeModal = null;
+  render();
+}
+
+async function publishStory(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const isVideo = file.type.startsWith('video/');
+  try {
+    let mediaData = '';
+    if (isVideo) {
+      mediaData = await readMediaFileAsDataURL(file, 7);
+    } else {
+      mediaData = await compressImageFile(file, 720, 0.8);
+    }
+    const music = prompt('Music track title (optional):', 'Chill Beats') || '';
+    await db.collection('stories').add({
+      uid: state.user.uid,
+      mediaType: isVideo ? 'video' : 'image',
+      media: mediaData,
+      music,
+      createdAt: TS()
+    });
+    playSound('msg_out');
+    showToast('Story published!');
+  } catch (err) {
+    showToast(err.message || 'Could not upload story');
   }
+}
+
+function openMoodComposer() {
+  state.activeModal = 'mood';
+  state.selectedMood = MOOD_LIST[0].emoji;
+  state.moodDraft = '';
   render();
 }
 
 async function saveMoodPost() {
   const text = state.moodDraft.trim();
-  if (!text) return showToast(tr('errFields'));
+  if (!text) return showToast('Write a short mood note');
   const moodObj = MOOD_LIST.find(m => m.emoji === state.selectedMood) || MOOD_LIST[0];
-  try {
-    await db.collection('moods').add({
-      uid: state.user.uid, emoji: state.selectedMood, moodLabel: moodObj.en,
-      text, likes: [], comments: [], createdAt: TS()
-    });
-    state.activeModal = null; state.moodDraft = '';
-    playSound('msg_out');
-    showToast(tr('toastPosted'));
-    render();
-  } catch (err) { showToast(err.message || tr('errGeneric')); }
+  await db.collection('moods').add({
+    uid: state.user.uid, emoji: state.selectedMood, moodLabel: moodObj.en,
+    text, likes: [], comments: [], createdAt: TS()
+  });
+  state.activeModal = null; state.moodDraft = '';
+  playSound('msg_out');
+  render();
 }
 
 async function toggleMoodLike(moodId) {
@@ -926,28 +1010,15 @@ async function publishPost() {
   const caption = state.postCaption.trim();
   const image = state.postImageData || state.postImageUrl.trim();
   const location = state.postLocation.trim();
-  if (!caption && !image) return showToast(tr('errFields'));
-  try {
-    await db.collection('posts').add({
-      uid: state.user.uid, caption, image, location,
-      likes: [], comments: [], createdAt: TS()
-    });
-    state.activeModal = null; state.postCaption = ''; state.postImageUrl = '';
-    state.postImageData = ''; state.postLocation = '';
-    playSound('msg_out');
-    showToast(tr('toastPosted'));
-    render();
-  } catch (err) { showToast(err.message || tr('errGeneric')); }
-}
-
-async function publishStory(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const dataUrl = await compressImageFile(file, 720, 0.8);
-  const music = prompt('Enter background music track name (optional):', 'Lofi Chill') || '';
-  await db.collection('stories').add({ uid: state.user.uid, image: dataUrl, music, createdAt: TS() });
+  if (!caption && !image) return showToast('Add caption or photo');
+  await db.collection('posts').add({
+    uid: state.user.uid, caption, image, location,
+    likes: [], comments: [], createdAt: TS()
+  });
+  state.activeModal = null; state.postCaption = ''; state.postImageUrl = '';
+  state.postImageData = ''; state.postLocation = '';
   playSound('msg_out');
-  showToast(tr('toastPosted'));
+  render();
 }
 
 async function togglePostLike(postId) {
@@ -994,7 +1065,7 @@ async function toggleFollow(targetUid) {
 }
 
 /* ============================================================================
-   10. CHAT, VOICE, EDIT, DELETE & TELEGRAM-STYLE CALLS
+   11. CHAT (SMS, PHOTO, VIDEO, VOICE) & AUDIO-ONLY CALLS
    ============================================================================ */
 function openConversation(targetUid) {
   state.tab = 'chats';
@@ -1046,15 +1117,28 @@ async function sendChatMessage(e) {
   pushNotification(state.chatWith, 'message', 'sent a message: ' + text.slice(0, 40));
 }
 
-async function sendChatImage(input) {
+async function sendChatMedia(input) {
   const file = input.files[0];
   if (!file || !state.chatWith) return;
-  const imgData = await compressImageFile(file, 700, 0.78);
+  const isVideo = file.type.startsWith('video/');
   const cid = pairId(state.user.uid, state.chatWith);
-  playSound('msg_out');
-  await db.collection('conversations').doc(cid).collection('messages').add({
-    senderId: state.user.uid, receiverId: state.chatWith, type: 'image', image: imgData, text: 'Photo', createdAt: TS()
-  });
+  try {
+    if (isVideo) {
+      const videoData = await readMediaFileAsDataURL(file, 7);
+      playSound('msg_out');
+      await db.collection('conversations').doc(cid).collection('messages').add({
+        senderId: state.user.uid, receiverId: state.chatWith, type: 'video', video: videoData, text: 'Video', createdAt: TS()
+      });
+    } else {
+      const imgData = await compressImageFile(file, 700, 0.78);
+      playSound('msg_out');
+      await db.collection('conversations').doc(cid).collection('messages').add({
+        senderId: state.user.uid, receiverId: state.chatWith, type: 'image', image: imgData, text: 'Photo', createdAt: TS()
+      });
+    }
+  } catch (err) {
+    showToast(err.message || 'Media upload failed');
+  }
 }
 
 async function toggleVoiceRecording() {
@@ -1094,35 +1178,34 @@ async function deleteMessage(msgId) {
   await db.collection('conversations').doc(cid).collection('messages').doc(msgId).delete();
 }
 
-async function startEditMessage(msgId, currentText) {
+function startEditMessage(msgId, currentText) {
   state.editingMsgId = msgId;
   state.draftMsg = currentText;
   render();
 }
 
-async function logCallToChat(peerUid, callType, callStatus, durationSec = 0) {
+async function logCallToChat(peerUid, callStatus, durationSec = 0) {
   if (!db || !state.user || !peerUid) return;
   const cid = pairId(state.user.uid, peerUid);
   const convRef = db.collection('conversations').doc(cid);
   const m = String(Math.floor(durationSec / 60)).padStart(2, '0');
   const s = String(durationSec % 60).padStart(2, '0');
   const durText = durationSec > 0 ? `${m}:${s}` : '';
-  const summary = `${callType === 'video' ? 'Video Call' : 'Audio Call'} · ${callStatus}${durText ? ' (' + durText + ')' : ''}`;
+  const summary = `Audio Call · ${callStatus}${durText ? ' (' + durText + ')' : ''}`;
 
   try {
     await convRef.set({ members: [state.user.uid, peerUid], lastMessage: summary, updatedAt: TS() }, { merge: true });
     await convRef.collection('messages').add({
-      senderId: state.user.uid, receiverId: peerUid, type: 'call', callType, callStatus, duration: durText, text: summary, createdAt: TS()
+      senderId: state.user.uid, receiverId: peerUid, type: 'call', callStatus, duration: durText, text: summary, createdAt: TS()
     });
   } catch (_) {}
 }
 
-/* WebRTC Telegram Call Engine with Switch Camera Support */
+/* Audio-Only WebRTC Engine */
 const RTC_CONFIG = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 const rtcState = {
-  id: null, peerUid: null, callType: 'audio', isCaller: false, connected: false,
-  pc: null, local: null, remote: null, unsubs: [], timer: null, ringTimer: null, seconds: 0,
-  usingFrontCamera: true
+  id: null, peerUid: null, isCaller: false, connected: false,
+  pc: null, local: null, remote: null, unsubs: [], timer: null, ringTimer: null, seconds: 0
 };
 
 function startCallTimer() {
@@ -1139,23 +1222,21 @@ function startCallTimer() {
   }, 1000);
 }
 
-async function startWebRTCCall(targetUid, callType) {
+async function startAudioCall(targetUid) {
   if (rtcState.id) return;
   const peer = getUser(targetUid);
   const callRef = db.collection('calls').doc();
   rtcState.id = callRef.id;
   rtcState.peerUid = targetUid;
-  rtcState.callType = callType;
   rtcState.isCaller = true;
   rtcState.connected = false;
   rtcState.seconds = 0;
-  rtcState.usingFrontCamera = true;
 
   try {
-    rtcState.local = await navigator.mediaDevices.getUserMedia({ audio: true, video: callType === 'video' ? { facingMode: 'user' } : false });
+    rtcState.local = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
   } catch (err) {
     rtcState.id = null;
-    return showToast('Camera/Microphone access denied.');
+    return showToast('Microphone access denied.');
   }
   const pc = new RTCPeerConnection(RTC_CONFIG);
   rtcState.pc = pc;
@@ -1163,21 +1244,21 @@ async function startWebRTCCall(targetUid, callType) {
   rtcState.local.getTracks().forEach(t => pc.addTrack(t, rtcState.local));
   pc.ontrack = e => {
     e.streams[0].getTracks().forEach(t => rtcState.remote.addTrack(t));
-    const rv = $('remote-video'); if (rv) rv.srcObject = rtcState.remote;
+    const ra = $('remote-audio'); if (ra) ra.srcObject = rtcState.remote;
   };
   pc.onicecandidate = e => { if (e.candidate) callRef.collection('callerCandidates').add(e.candidate.toJSON()); };
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
   await callRef.set({
-    callerId: state.user.uid, calleeId: targetUid, type: callType, status: 'ringing',
+    callerId: state.user.uid, calleeId: targetUid, type: 'audio', status: 'ringing',
     offer: { type: offer.type, sdp: offer.sdp }, createdAt: TS()
   });
-  renderCallOverlay(peer, callType, tr('calling'), false);
+  renderCallOverlay(peer, tr('calling'), false);
 
   rtcState.unsubs.push(callRef.onSnapshot(async snap => {
     const data = snap.data();
     if (!data) return;
-    if (['ended', 'declined'].includes(data.status)) return endWebRTCCall(false, data.status);
+    if (['ended', 'declined'].includes(data.status)) return endAudioCall(false, data.status);
     if (data.answer && !pc.currentRemoteDescription) {
       await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
       startCallTimer();
@@ -1195,14 +1276,13 @@ function watchIncomingCalls() {
         const data = c.doc.data();
         rtcState.id = c.doc.id;
         rtcState.peerUid = data.callerId;
-        rtcState.callType = data.type;
         rtcState.isCaller = false;
         rtcState.connected = false;
         rtcState.seconds = 0;
         await ensureProfiles([data.callerId]);
         playSound('ring');
         rtcState.ringTimer = setInterval(() => playSound('ring'), 2500);
-        renderCallOverlay(getUser(data.callerId), data.type, tr('incomingCall'), true);
+        renderCallOverlay(getUser(data.callerId), tr('incomingCall'), true);
       }
     });
   }));
@@ -1213,48 +1293,30 @@ async function acceptIncomingCall() {
   const callRef = db.collection('calls').doc(rtcState.id);
   const data = (await callRef.get()).data();
   if (!data) return;
-  rtcState.local = await navigator.mediaDevices.getUserMedia({ audio: true, video: data.type === 'video' ? { facingMode: 'user' } : false });
+  rtcState.local = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
   const pc = new RTCPeerConnection(RTC_CONFIG);
   rtcState.pc = pc;
   rtcState.remote = new MediaStream();
   rtcState.local.getTracks().forEach(t => pc.addTrack(t, rtcState.local));
   pc.ontrack = e => {
     e.streams[0].getTracks().forEach(t => rtcState.remote.addTrack(t));
-    const rv = $('remote-video'); if (rv) rv.srcObject = rtcState.remote;
+    const ra = $('remote-audio'); if (ra) ra.srcObject = rtcState.remote;
   };
   pc.onicecandidate = e => { if (e.candidate) callRef.collection('calleeCandidates').add(e.candidate.toJSON()); };
   await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
   const answer = await pc.createAnswer();
   await pc.setLocalDescription(answer);
   await callRef.update({ status: 'connected', answer: { type: answer.type, sdp: answer.sdp } });
-  renderCallOverlay(getUser(data.callerId), data.type, 'Connected', false);
+  renderCallOverlay(getUser(data.callerId), 'Connected', false);
   startCallTimer();
   rtcState.unsubs.push(callRef.collection('callerCandidates').onSnapshot(s => {
     s.docChanges().forEach(c => { if (c.type === 'added') pc.addIceCandidate(new RTCIceCandidate(c.doc.data())); });
   }));
-  rtcState.unsubs.push(callRef.onSnapshot(s => { if (s.data() && s.data().status === 'ended') endWebRTCCall(false, 'ended'); }));
+  rtcState.unsubs.push(callRef.onSnapshot(s => { if (s.data() && s.data().status === 'ended') endAudioCall(false, 'ended'); }));
 }
 
-async function switchCamera() {
-  if (!rtcState.local) return;
-  rtcState.usingFrontCamera = !rtcState.usingFrontCamera;
-  try {
-    const newStream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: { facingMode: rtcState.usingFrontCamera ? 'user' : 'environment' }
-    });
-    const videoTrack = newStream.getVideoTracks()[0];
-    if (rtcState.pc) {
-      const sender = rtcState.pc.getSenders().find(s => s.track && s.track.kind === 'video');
-      if (sender) sender.replaceTrack(videoTrack);
-    }
-    rtcState.local = newStream;
-    const lv = $('local-video'); if (lv) lv.srcObject = newStream;
-  } catch (err) { showToast('Could not switch camera'); }
-}
-
-async function endWebRTCCall(updateDb = true, remoteStatus = 'ended') {
-  const { id, peerUid, callType, isCaller, connected, seconds } = rtcState;
+async function endAudioCall(updateDb = true, remoteStatus = 'ended') {
+  const { id, peerUid, isCaller, connected, seconds } = rtcState;
   clearInterval(rtcState.timer); clearInterval(rtcState.ringTimer);
   rtcState.unsubs.forEach(u => u()); rtcState.unsubs = [];
   if (rtcState.pc) { rtcState.pc.close(); rtcState.pc = null; }
@@ -1265,7 +1327,7 @@ async function endWebRTCCall(updateDb = true, remoteStatus = 'ended') {
 
   if (isCaller && peerUid) {
     const finalStatus = connected ? 'Completed' : (remoteStatus === 'declined' ? 'Declined' : 'Missed');
-    await logCallToChat(peerUid, callType, finalStatus, seconds);
+    await logCallToChat(peerUid, finalStatus, seconds);
   }
   if (updateDb && id) {
     try {
@@ -1275,34 +1337,34 @@ async function endWebRTCCall(updateDb = true, remoteStatus = 'ended') {
   }
 }
 
-function renderCallOverlay(peer, type, statusText, isIncoming) {
+function renderCallOverlay(peer, statusText, isIncoming) {
   const root = $('callroot');
   root.style.display = 'flex';
   root.innerHTML = `
-    <div class="relative flex-1 flex flex-col items-center justify-center p-6 bg-black">
-      <video id="remote-video" autoplay playsinline class="absolute inset-0 w-full h-full object-cover opacity-90"></video>
-      <video id="local-video" autoplay playsinline muted class="absolute top-5 right-5 w-28 h-40 rounded-2xl object-cover border border-white/20 z-10 ${type === 'video' ? '' : 'hidden'}"></video>
-      <div class="relative z-10 text-center space-y-3 bg-black/60 backdrop-blur-md px-8 py-6 rounded-3xl border border-white/10">
-        ${avatarHTML(peer, 'w-24 h-24 mx-auto', 'text-3xl')}
-        <h3 class="text-xl font-bold">${esc(peer.name)}</h3>
-        <p id="call-timer" class="text-sm text-blue-300 font-mono">${esc(statusText)}</p>
+    <div class="relative flex-1 flex flex-col items-center justify-center p-6">
+      <audio id="remote-audio" autoplay></audio>
+      <div class="text-center space-y-4 bg-white/5 backdrop-blur-lg px-10 py-8 rounded-3xl border border-white/10">
+        ${avatarHTML(peer, 'w-28 h-28 mx-auto', 'text-4xl')}
+        <div>
+          <h3 class="text-2xl font-bold">${esc(peer.name)}</h3>
+          <p class="text-xs text-blue-400 mt-0.5">@${esc(peer.username)}</p>
+        </div>
+        <p id="call-timer" class="text-base text-emerald-400 font-mono">${esc(statusText)}</p>
       </div>
     </div>
-    <div class="p-6 flex justify-center items-center gap-6 bg-[#080b14] z-10">
-      ${type === 'video' ? `<button onclick="switchCamera()" class="px-4 py-3 rounded-2xl bg-white/10 font-semibold text-xs flex items-center gap-2">📷 Switch Camera</button>` : ''}
+    <div class="p-8 flex justify-center items-center gap-8 bg-[#080b14]">
       ${isIncoming ? `
-        <button onclick="endWebRTCCall(true)" class="w-16 h-16 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-lg text-lg">✕</button>
+        <button onclick="endAudioCall(true)" class="w-16 h-16 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-lg text-xl">✕</button>
         <button onclick="acceptIncomingCall()" class="w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-lg">${ICONS.phone()}</button>
       ` : `
-        <button onclick="endWebRTCCall(true)" class="w-16 h-16 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-lg text-lg">✕</button>
+        <button onclick="endAudioCall(true)" class="w-16 h-16 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-lg text-xl">✕</button>
       `}
     </div>`;
-  const lv = $('local-video'); if (lv && rtcState.local) lv.srcObject = rtcState.local;
-  const rv = $('remote-video'); if (rv && rtcState.remote) rv.srcObject = rtcState.remote;
+  const ra = $('remote-audio'); if (ra && rtcState.remote) ra.srcObject = rtcState.remote;
 }
 
 /* ============================================================================
-   11. SETTINGS & PROFILE UPDATES
+   12. SETTINGS & PROFILE UPDATES
    ============================================================================ */
 async function updateProfileDetails(e) {
   e.preventDefault();
@@ -1315,7 +1377,7 @@ async function updateProfileDetails(e) {
     firstName, lastName, name: (firstName + ' ' + lastName).trim(), bio, website, isPrivate
   });
   state.activeModal = null;
-  showToast(tr('toastSaved'));
+  showToast('Profile saved');
 }
 
 async function updateAvatarPhoto(input) {
@@ -1323,7 +1385,7 @@ async function updateAvatarPhoto(input) {
   if (!file) return;
   const photo = await compressImageFile(file, 320, 0.85);
   await db.collection('users').doc(state.user.uid).update({ photo });
-  showToast(tr('toastSaved'));
+  showToast('Photo updated');
 }
 
 function toggleSoundEffects() {
@@ -1348,14 +1410,14 @@ function setTheme(newTheme) {
 }
 
 /* ============================================================================
-   12. UI VIEWS (INSTAGRAM-TELEGRAM HYBRID DESIGN)
+   13. VIEWS RENDERERS
    ============================================================================ */
 function renderAuthScreen() {
   if (!HAS_FIREBASE_SDK || !CONFIGURED) {
     return `<div class="card p-6 text-center space-y-4 my-12">
       ${logoSVG('w-16 h-16 mx-auto')}
       <h2 class="text-xl font-bold">Moodgram Setup Required</h2>
-      <p class="text-sm text-amber-400">Please paste your Firebase configuration keys into the code.</p>
+      <p class="text-sm text-amber-400">Please paste your Firebase keys into index.html.</p>
     </div>`;
   }
   if (state.authMode === 'complete_google') {
@@ -1382,10 +1444,10 @@ function renderAuthScreen() {
   }
   if (state.authMode === 'register') {
     return `<div class="card p-6 space-y-4 my-6">
-      <div class="text-center space-y-2">${logoSVG('w-14 h-14 mx-auto')}<h2 class="text-xl font-bold">${tr('registerTitle')}</h2></div>
+      <div class="text-center space-y-2">${logoSVG('w-14 h-14 mx-auto')}<h2 class="text-xl font-bold">${tr('registerTitle')}</h2><p class="text-[11px] text-blue-400">First 30 users get an automatic Verified Badge ✓</p></div>
       <form onsubmit="handleRegister(event)" class="space-y-3">
         <div class="flex items-center gap-3">
-          ${state.regPhotoData ? `<img src="${state.regPhotoData}" class="w-12 h-12 rounded-full object-cover">` : `<div class="w-12 h-12 rounded-full soft flex items-center justify-center">${ICONS.camera()}</div>`}
+          ${state.regPhotoData ? `<img src="${state.regPhotoData}" class="w-12 h-12 rounded-full object-cover">` : `<div class="w-12 h-12 rounded-full soft flex items-center justify-center">${ICONS.media()}</div>`}
           <label class="btn-ghost flex-1 text-center text-xs py-2.5 cursor-pointer">${tr('choosePhoto')}<input type="file" accept="image/*" hidden onchange="handleRegPhotoSelect(this)"></label>
         </div>
         <div class="grid grid-cols-2 gap-2">
@@ -1430,7 +1492,7 @@ function renderHomeView() {
           <span class="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold border-2 border-[#0d1224]">+</span>
         </div>
         <span class="text-[11px] muted">${tr('addStory')}</span>
-        <input type="file" accept="image/*" hidden onchange="publishStory(this)">
+        <input type="file" accept="image/*,video/*" hidden onchange="publishStory(this)">
       </label>
       ${state.stories.map(s => {
         const u = getUser(s.uid);
@@ -1556,7 +1618,7 @@ function handleExploreSearchInput(val) {
 function buildExploreResultsHTML() {
   const q = state.searchQuery.trim().toLowerCase();
   if (!q) {
-    return `<div class="card p-12 text-center text-sm muted">Search for users by typing @username or name...</div>`;
+    return `<div class="card p-12 text-center text-sm muted">Type @username or name to find people...</div>`;
   }
   const cleanQ = q.replace(/^@/, '');
   const matchingUsers = state.allUsers.filter(u => u.id !== state.user.uid && !state.blockedIds.includes(u.id) && ((u.name || '').toLowerCase().includes(cleanQ) || (u.username || '').toLowerCase().includes(cleanQ))).slice(0, 20);
@@ -1601,10 +1663,7 @@ function renderChatsView() {
               <div class="text-[11px]">${getPresenceLabel(peer)}</div>
             </div>
           </div>
-          <div class="flex gap-2">
-            <button onclick="startWebRTCCall('${peer.id}', 'audio')" class="btn-ghost p-2.5 rounded-full icon-btn">${ICONS.phone()}</button>
-            <button onclick="startWebRTCCall('${peer.id}', 'video')" class="btn-ghost p-2.5 rounded-full icon-btn">${ICONS.video()}</button>
-          </div>
+          <button onclick="startAudioCall('${peer.id}')" class="btn-ghost p-2.5 rounded-full icon-btn" title="Audio Call">${ICONS.phone()}</button>
         </div>
         <div id="chat-scroll" class="flex-1 overflow-y-auto p-4 space-y-3">
           ${state.messages.map(m => {
@@ -1613,9 +1672,7 @@ function renderChatsView() {
               return `
                 <div class="flex justify-center my-2">
                   <div class="card px-4 py-2.5 rounded-2xl flex items-center gap-3 text-xs border-blue-500/30">
-                    <span class="w-8 h-8 rounded-full soft flex items-center justify-center text-blue-400">
-                      ${m.callType === 'video' ? ICONS.video() : ICONS.phone()}
-                    </span>
+                    <span class="w-8 h-8 rounded-full soft flex items-center justify-center text-blue-400">${ICONS.phone()}</span>
                     <div>
                       <div class="font-semibold">${esc(m.text)}</div>
                       <div class="text-[10px] muted">${timeAgo(tsToMs(m))}</div>
@@ -1627,6 +1684,7 @@ function renderChatsView() {
               <div class="flex flex-col ${mine ? 'items-end' : 'items-start'} group">
                 <div class="max-w-[78%] px-3.5 py-2.5 rounded-2xl text-sm ${mine ? 'grad text-white' : 'card'} relative">
                   ${m.type === 'image' && m.image ? `<img src="${esc(m.image)}" class="rounded-xl max-h-60 mb-1">` : ''}
+                  ${m.type === 'video' && m.video ? `<video controls src="${esc(m.video)}" class="rounded-xl max-h-60 mb-1"></video>` : ''}
                   ${m.type === 'audio' && m.audio ? `<audio controls src="${esc(m.audio)}" class="max-w-[220px] h-9"></audio>` : ''}
                   ${m.type === 'text' ? `<div class="break-words">${esc(m.text)}</div>` : ''}
                   <div class="text-[10px] opacity-70 mt-1 flex items-center justify-end gap-1.5">
@@ -1636,7 +1694,7 @@ function renderChatsView() {
                 </div>
                 ${mine ? `
                   <div class="flex gap-2 text-[10px] muted mt-0.5 opacity-0 group-hover:opacity-100 transition px-1">
-                    <button onclick="startEditMessage('${m.id}', '${esc(m.text)}')" class="hover:text-blue-400">Edit</button>
+                    ${m.type === 'text' ? `<button onclick="startEditMessage('${m.id}', '${esc(m.text)}')" class="hover:text-blue-400">Edit</button>` : ''}
                     <button onclick="deleteMessage('${m.id}')" class="hover:text-rose-400">Delete</button>
                   </div>` : ''}
               </div>`;
@@ -1644,16 +1702,38 @@ function renderChatsView() {
         </div>
         ${state.isRecording ? `<div class="px-4 py-2 bg-rose-600/20 text-rose-300 text-xs text-center">${tr('recording')}</div>` : ''}
         <form onsubmit="sendChatMessage(event)" class="p-3 border-t line flex items-center gap-2">
-          <label class="btn-ghost p-2.5 rounded-full cursor-pointer icon-btn">${ICONS.camera()}<input type="file" accept="image/*" hidden onchange="sendChatImage(this)"></label>
-          <button type="button" onclick="toggleVoiceRecording()" class="btn-ghost p-2.5 rounded-full icon-btn ${state.isRecording ? 'bg-rose-600 text-white' : ''}">${ICONS.mic()}</button>
+          <label class="btn-ghost p-2.5 rounded-full cursor-pointer icon-btn" title="Photo or Video">${ICONS.media()}<input type="file" accept="image/*,video/*" hidden onchange="sendChatMedia(this)"></label>
+          <button type="button" onclick="toggleVoiceRecording()" class="btn-ghost p-2.5 rounded-full icon-btn ${state.isRecording ? 'bg-rose-600 text-white' : ''}" title="Voice">${ICONS.mic()}</button>
           <input value="${esc(state.draftMsg)}" oninput="state.draftMsg=this.value" placeholder="${tr('typeMsg')}" class="input flex-1">
           <button type="submit" class="btn px-4 py-2.5">${state.editingMsgId ? 'Save' : ICONS.share()}</button>
         </form>
       </div>`;
   }
+
+  const myNote = state.notes.find(n => n.uid === state.user.uid);
+  const friendNotes = state.notes.filter(n => n.uid !== state.user.uid && !state.blockedIds.includes(n.uid));
+
+  const notesTray = `
+    <div class="flex gap-4 overflow-x-auto hs pt-3 pb-2">
+      <div onclick="state.activeModal='emoji_note';render()" class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer relative">
+        <div class="note-bubble">${myNote ? myNote.emoji : '+'}</div>
+        ${avatarHTML(state.profile, 'w-14 h-14')}
+        <span class="text-[11px] muted">${tr('emojiNote')}</span>
+      </div>
+      ${friendNotes.map(n => {
+        const u = getUser(n.uid);
+        return `<div onclick="openConversation('${n.uid}')" class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer relative">
+          <div class="note-bubble">${n.emoji}</div>
+          ${avatarHTML(u, 'w-14 h-14')}
+          <span class="text-[11px] muted truncate w-14 text-center">${esc(u.username)}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+
   const chatPartners = [...new Set([...state.followingIds, ...state.followerIds])].filter(id => !state.blockedIds.includes(id));
   return `<div class="space-y-4">
     <h2 class="text-xl font-bold">${tr('messages')}</h2>
+    ${notesTray}
     ${chatPartners.map(uid => {
       const u = getUser(uid);
       return `<button onclick="openConversation('${uid}')" class="card w-full p-3.5 flex items-center gap-3 text-left">
@@ -1679,7 +1759,7 @@ function renderProfileView(targetUid = null) {
       <div class="flex items-start gap-4">
         <div class="relative">
           ${avatarHTML(u, 'w-20 h-20', 'text-2xl', true)}
-          ${isMe ? `<label class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full grad text-white flex items-center justify-center cursor-pointer">${ICONS.camera()}<input type="file" accept="image/*" hidden onchange="updateAvatarPhoto(this)"></label>` : ''}
+          ${isMe ? `<label class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full grad text-white flex items-center justify-center cursor-pointer">${ICONS.media()}<input type="file" accept="image/*" hidden onchange="updateAvatarPhoto(this)"></label>` : ''}
         </div>
         <div class="flex-1 min-w-0 space-y-1">
           <h2 class="text-lg font-bold truncate flex items-center">${esc(u.name)}${verificationBadge(u, 18)}</h2>
@@ -1738,7 +1818,7 @@ function renderSettingsView() {
     <div class="card p-4 space-y-2 text-xs">
       <div class="font-bold text-sm">${tr('aboutApp')}</div>
       <p class="muted leading-relaxed">${tr('aboutDesc')}</p>
-      <div class="pt-2 border-t line flex justify-between muted font-medium"><span>Moodgram v4.0</span><span>${tr('byline')}</span></div>
+      <div class="pt-2 border-t line flex justify-between muted font-medium"><span>Moodgram v5.0</span><span>${tr('byline')}</span></div>
     </div>
     <button onclick="logoutUser()" class="btn-ghost w-full py-3 text-rose-400 font-semibold">${tr('logout')}</button>
   </div>`;
@@ -1747,7 +1827,17 @@ function renderSettingsView() {
 function renderModals() {
   const root = $('modalroot');
   if (!state.activeModal) { root.innerHTML = ''; return; }
-  if (state.activeModal === 'mood') {
+  if (state.activeModal === 'emoji_note') {
+    root.innerHTML = `<div class="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4" onclick="if(event.target===this){state.activeModal=null;render()}">
+      <div class="card w-full max-w-sm p-5 space-y-4">
+        <div class="flex justify-between items-center"><h3 class="font-bold text-base">${tr('setEmojiNote')}</h3><button onclick="state.activeModal=null;render()" class="muted">✕</button></div>
+        <div class="grid grid-cols-4 gap-2.5">
+          ${NOTE_EMOJIS.map(em => `<button onclick="saveEmojiNote('${em}')" class="mood-chip mx-auto hover:scale-110 transition">${em}</button>`).join('')}
+        </div>
+        <button onclick="deleteEmojiNote()" class="btn-ghost w-full py-2 text-xs text-rose-400">Clear Note</button>
+      </div>
+    </div>`;
+  } else if (state.activeModal === 'mood') {
     root.innerHTML = `<div class="fixed inset-0 z-50 bg-black/70 flex items-end md:items-center justify-center p-0 md:p-4" onclick="if(event.target===this){state.activeModal=null;render()}">
       <div class="card w-full md:max-w-md rounded-b-none md:rounded-3xl p-5 space-y-4">
         <div class="flex justify-between items-center"><h3 class="font-bold text-base">${tr('shareMood')}</h3><button onclick="state.activeModal=null;render()" class="muted text-lg">✕</button></div>
@@ -1763,7 +1853,7 @@ function renderModals() {
         <textarea oninput="state.postCaption=this.value" rows="3" placeholder="${tr('writeCaption')}" class="input resize-none">${esc(state.postCaption)}</textarea>
         <input value="${esc(state.postLocation)}" oninput="state.postLocation=this.value" placeholder="${tr('locationPh')}" class="input text-xs">
         <input value="${esc(state.postImageUrl)}" oninput="state.postImageUrl=this.value" placeholder="${tr('imageUrlPh')}" class="input text-xs">
-        <label class="btn-ghost w-full py-2.5 text-center flex items-center justify-center gap-2 cursor-pointer text-xs">${ICONS.camera()} Upload Photo<input type="file" accept="image/*" hidden onchange="handlePostFileSelect(this)"></label>
+        <label class="btn-ghost w-full py-2.5 text-center flex items-center justify-center gap-2 cursor-pointer text-xs">${ICONS.media()} Upload Photo<input type="file" accept="image/*" hidden onchange="handlePostFileSelect(this)"></label>
         ${state.postImageData ? `<img src="${state.postImageData}" class="h-32 w-full object-cover rounded-xl">` : ''}
         <button onclick="publishPost()" class="btn w-full py-3">${tr('publish')}</button>
       </div>
@@ -1787,11 +1877,14 @@ function viewStory(storyId) {
   const s = state.stories.find(x => x.id === storyId);
   if (!s) return;
   const u = getUser(s.uid);
-  $('modalroot').innerHTML = `<div class="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center p-4" onclick="state.activeModal=null;renderModals()">
+  const src = s.media || s.image;
+  const isVid = s.mediaType === 'video';
+  $('modalroot').innerHTML = `<div class="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center p-4" onclick="if(event.target===this){state.activeModal=null;renderModals()}">
     <div class="max-w-sm w-full space-y-3 text-center">
       <div class="flex items-center gap-2.5 text-white justify-center">${avatarHTML(u, 'w-9 h-9')}<span class="font-semibold text-sm">@${esc(u.username)}</span></div>
-      <img src="${esc(s.image)}" class="w-full max-h-[70vh] object-contain rounded-2xl mx-auto">
+      ${isVid ? `<video src="${esc(src)}" autoplay controls class="w-full max-h-[70vh] rounded-2xl mx-auto"></video>` : `<img src="${esc(src)}" class="w-full max-h-[70vh] object-contain rounded-2xl mx-auto">`}
       ${s.music ? `<div class="text-xs text-blue-400 font-medium">🎵 Playing music: ${esc(s.music)}</div>` : ''}
+      <button onclick="state.activeModal=null;renderModals()" class="btn-ghost text-xs px-5 py-2">Close</button>
     </div>
   </div>`;
 }
