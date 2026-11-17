@@ -3,33 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Moodgram — by Matmusoevs Team</title>
+<title>Moodgram — Telegram & Instagram Hybrid</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
   :root {
-    --bg: #060913;
-    --card: #0e1322;
-    --card2: #161d33;
-    --border: #202a47;
+    --bg: #05070f;
+    --card: #0d1224;
+    --card2: #141c33;
+    --border: #1e2846;
     --text: #f3f6fc;
-    --muted: #8894b8;
-    --accent: #3b82f6;
-    --accent2: #8b5cf6;
-    --neon: rgba(59, 130, 246, 0.22);
+    --muted: #8390b4;
+    --accent: #2563eb;
+    --accent2: #7c3aed;
+    --neon: rgba(37, 99, 235, 0.2);
   }
   html.light {
-    --bg: #f4f6fb;
+    --bg: #f2f5fc;
     --card: #ffffff;
-    --card2: #eef1f9;
-    --border: #dce2f0;
-    --text: #0f172a;
+    --card2: #e9edf8;
+    --border: #d4daf0;
+    --text: #0b1120;
     --muted: #64748b;
     --accent: #2563eb;
     --accent2: #7c3aed;
-    --neon: rgba(37, 99, 235, 0.14);
+    --neon: rgba(37, 99, 235, 0.12);
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
@@ -40,112 +40,47 @@
     overflow-x: hidden;
     margin: 0;
   }
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 22px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.16);
-  }
-  .glass {
-    background: rgba(14, 19, 34, 0.86);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-  }
-  html.light .glass { background: rgba(255, 255, 255, 0.9); }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 22px; box-shadow: 0 4px 24px rgba(0,0,0,0.18); }
+  .glass { background: rgba(13, 18, 36, 0.88); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+  html.light .glass { background: rgba(255, 255, 255, 0.92); }
   .soft { background: var(--card2); }
   .muted { color: var(--muted); }
   .line { border-color: var(--border); }
   .input {
-    background: var(--card2);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    color: var(--text);
-    padding: 11px 14px;
-    width: 100%;
-    outline: none;
-    font-size: 14px;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    background: var(--card2); border: 1px solid var(--border); border-radius: 14px;
+    color: var(--text); padding: 12px 14px; width: 100%; outline: none; font-size: 14px;
+    transition: all 0.2s;
   }
-  .input:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--neon);
-  }
+  .input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--neon); }
   .btn {
-    background: linear-gradient(135deg, #2563eb, #7c3aed);
-    color: #fff;
-    border-radius: 14px;
-    font-weight: 600;
-    padding: 10px 16px;
-    font-size: 13px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    cursor: pointer;
-    border: none;
-    transition: transform 0.12s, opacity 0.2s;
+    background: linear-gradient(135deg, #2563eb, #7c3aed); color: #fff; border-radius: 14px;
+    font-weight: 600; padding: 11px 18px; font-size: 13px; display: inline-flex;
+    align-items: center; justify-content: center; gap: 6px; cursor: pointer; border: none;
+    transition: transform 0.1s, opacity 0.2s;
   }
   .btn:active { transform: scale(0.97); }
   .btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn-ghost {
-    background: var(--card2);
-    color: var(--text);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    font-weight: 600;
-    padding: 9px 14px;
-    font-size: 13px;
-    cursor: pointer;
-    transition: transform 0.12s;
+    background: var(--card2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 14px; font-weight: 600; padding: 10px 16px; font-size: 13px; cursor: pointer;
   }
-  .btn-ghost:active { transform: scale(0.97); }
   .grad { background: linear-gradient(135deg, #1d4ed8, #3b82f6, #8b5cf6); }
   .ig-ring { background: linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899, #f59e0b); }
   .logo-text {
     background: linear-gradient(90deg, #60a5fa, #a78bfa, #38bdf8);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    font-weight: 800;
-    letter-spacing: -0.02em;
+    -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 800;
   }
   .hs::-webkit-scrollbar { display: none; }
   .hs { scrollbar-width: none; }
-  .icon-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
-    cursor: pointer;
-  }
-  .icon-btn:active { transform: scale(0.82); }
+  .icon-btn { display: inline-flex; align-items: center; justify-content: center; transition: transform 0.15s; cursor: pointer; }
+  .icon-btn:active { transform: scale(0.8); }
   .mood-chip {
-    font-size: 26px;
-    width: 52px;
-    height: 52px;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid transparent;
-    background: var(--card2);
-    cursor: pointer;
-    transition: all 0.15s;
+    font-size: 26px; width: 52px; height: 52px; border-radius: 16px; display: flex;
+    align-items: center; justify-content: center; border: 2px solid transparent; background: var(--card2); cursor: pointer;
   }
-  .mood-chip.on {
-    border-color: var(--accent);
-    background: var(--neon);
-    transform: scale(1.06);
-  }
+  .mood-chip.on { border-color: var(--accent); background: var(--neon); transform: scale(1.06); }
   #toast { transition: opacity 0.25s, transform 0.25s; }
-  .call-root {
-    position: fixed;
-    inset: 0;
-    z-index: 80;
-    background: #05070e;
-    flex-direction: column;
-    color: #fff;
-  }
+  .call-root { position: fixed; inset: 0; z-index: 90; background: #03050a; flex-direction: column; color: #fff; }
 </style>
 </head>
 <body class="min-h-screen">
@@ -164,17 +99,14 @@
 <script>
 window.onerror = function(msg, src, line) {
   const box = document.getElementById('fatal-err');
-  if (box) {
-    box.style.display = 'block';
-    box.innerHTML = '<b>Moodgram Error:</b> ' + msg + ' (Line ' + line + ')';
-  }
+  if (box) { box.style.display = 'block'; box.innerHTML = '<b>Moodgram Error:</b> ' + msg + ' (Line ' + line + ')'; }
 };
 
 /* ============================================================================
-   1. FIREBASE CONFIGURATION (PASTE YOUR KEYS HERE)
+   1. FIREBASE CONFIGURATION
    ============================================================================ */
 const firebaseConfig = {
-    apiKey: "AIzaSyCMrBnRTtlCZD8HJJ-OmXJZiIvkQCH5qio",
+   apiKey: "AIzaSyCMrBnRTtlCZD8HJJ-OmXJZiIvkQCH5qio",
 
   authDomain: "friendsmood-acf05.firebaseapp.com",
 
@@ -192,11 +124,7 @@ const firebaseConfig = {
 const APP_CONFIG = {
   APP_NAME: "Moodgram",
   CREATOR: "Matmusoevs",
-  TEAM_TAGLINE: "from matmusoevs team",
-  LOGO_PATH: "aps.jpg",
-  FREE_BADGE_LIMIT: 30,
-  PREMIUM_PRICE_USD: 20,
-  PAYMENT_PROVIDER: "STRIPE_OR_GOOGLE_PLAY_BILLING"
+  LOGO_PATH: "APP.jpg"
 };
 
 const HAS_FIREBASE_SDK = typeof firebase !== 'undefined';
@@ -215,46 +143,31 @@ const FV = () => firebase.firestore.FieldValue;
 const TS = () => FV().serverTimestamp();
 
 /* ============================================================================
-   2. INSTAGRAM-STYLE MODERN SVG ICON SYSTEM
+   2. INSTAGRAM SVG ICON SYSTEM
    ============================================================================ */
 const ICONS = {
-  home: (active) => active
-    ? `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M22 23h-6.001a1 1 0 0 1-1-1v-5.455a2.997 2.997 0 1 0-5.993 0V22a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V11.543a1.002 1.002 0 0 1 .31-.724l10-9.543a1.001 1.001 0 0 1 1.38 0l10 9.543a1.002 1.002 0 0 1 .31.724V22a1 1 0 0 1-1 1Z"/></svg>`
-    : `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.005 16.545a2.997 2.997 0 0 1 2.997-2.997A2.997 2.997 0 0 1 15 16.545V22h7V11.543L12 2 2 11.543V22h7.005Z"/></svg>`,
-  mood: (active) => active
-    ? `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm-3.5 7a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm7 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm-3.5 8.5c-2.67 0-4.93-1.66-5.83-4h11.66c-.9 2.34-3.16 4-5.83 4z"/></svg>`
-    : `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>`,
-  explore: (active) => active
-    ? `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`
-    : `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
-  chats: (active) => active
-    ? `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.03 2 11c0 2.87 1.5 5.43 3.84 7.08L4.5 22l4.38-2.19c1 .25 2.04.39 3.12.39 5.52 0 10-4.03 10-9s-4.48-9.2-10-9.2zm1 12-2.5-2.66L5.6 14l5.4-5.73L13.5 10.9 18.4 8.27 13 14z"/></svg>`
-    : `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`,
-  notifs: (active) => active
-    ? `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.865 3.469-4.303 3.752-.477-.309-2.143-1.823-4.303-3.752C5.141 14.072 2.5 12.167 2.5 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938Z"/></svg>`
-    : `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
-  profile: (active) => active
-    ? `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 12c5.33 0 8 2.67 8 5v2H4v-2c0-2.33 2.67-5 8-5z"/></svg>`
-    : `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
-  settings: (active) => `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${active ? '2.4' : '2'}" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
-  heart: (liked) => liked
-    ? `<svg class="w-6 h-6 text-rose-500" viewBox="0 0 24 24" fill="currentColor"><path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.865 3.469-4.303 3.752-.477-.309-2.143-1.823-4.303-3.752C5.141 14.072 2.5 12.167 2.5 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938Z"/></svg>`
-    : `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
-  comment: () => `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`,
-  share: () => `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`,
-  bookmark: (saved) => saved
-    ? `<svg class="w-6 h-6 text-blue-400" viewBox="0 0 24 24" fill="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`
-    : `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`,
-  plusBox: () => `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="5"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`,
-  phone: () => `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`,
-  video: () => `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`,
-  mic: () => `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`,
-  camera: () => `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`,
-  trash: () => `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`
+  home: (act) => act ? `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M22 23h-6.001a1 1 0 0 1-1-1v-5.455a2.997 2.997 0 1 0-5.993 0V22a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V11.543a1.002 1.002 0 0 1 .31-.724l10-9.543a1.001 1.001 0 0 1 1.38 0l10 9.543a1.002 1.002 0 0 1 .31.724V22a1 1 0 0 1-1 1Z"/></svg>` : `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.005 16.545a2.997 2.997 0 0 1 2.997-2.997A2.997 2.997 0 0 1 15 16.545V22h7V11.543L12 2 2 11.543V22h7.005Z"/></svg>`,
+  mood: (act) => act ? `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm-3.5 7a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm7 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm-3.5 8.5c-2.67 0-4.93-1.66-5.83-4h11.66c-.9 2.34-3.16 4-5.83 4z"/></svg>` : `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>`,
+  explore: (act) => `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${act?'2.6':'2'}" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
+  chats: (act) => act ? `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.03 2 11c0 2.87 1.5 5.43 3.84 7.08L4.5 22l4.38-2.19c1 .25 2.04.39 3.12.39 5.52 0 10-4.03 10-9s-4.48-9.2-10-9.2zm1 12-2.5-2.66L5.6 14l5.4-5.73L13.5 10.9 18.4 8.27 13 14z"/></svg>` : `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`,
+  notifs: (act) => act ? `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.865 3.469-4.303 3.752-.477-.309-2.143-1.823-4.303-3.752C5.141 14.072 2.5 12.167 2.5 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938Z"/></svg>` : `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
+  profile: (act) => act ? `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 12c5.33 0 8 2.67 8 5v2H4v-2c0-2.33 2.67-5 8-5z"/></svg>` : `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+  settings: () => `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+  heart: (liked) => liked ? `<svg class="w-6 h-6 text-rose-500" viewBox="0 0 24 24" fill="currentColor"><path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.865 3.469-4.303 3.752-.477-.309-2.143-1.823-4.303-3.752C5.141 14.072 2.5 12.167 2.5 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938Z"/></svg>` : `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
+  comment: () => `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`,
+  share: () => `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`,
+  bookmark: (saved) => saved ? `<svg class="w-6 h-6 text-blue-400" viewBox="0 0 24 24" fill="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>` : `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`,
+  plusBox: () => `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="5"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`,
+  phone: () => `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`,
+  video: () => `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>`,
+  mic: () => `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`,
+  camera: () => `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`,
+  trash: () => `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`,
+  edit: () => `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`
 };
 
 /* ============================================================================
-   3. BUILT-IN SOUND EFFECTS ENGINE (SMS, NOTIFICATION, RINGTONE)
+   3. SOUND SYNTHESIZER ENGINE (SMS, NOTIFICATION, RINGTONE)
    ============================================================================ */
 let soundEnabled = localStorage.getItem('mg_sound') !== 'off';
 let audioCtx = null;
@@ -274,42 +187,34 @@ function playSound(type) {
     gain.connect(audioCtx.destination);
 
     if (type === 'msg_in') {
-      // Crisp double-pop SMS sound
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, now);
+      osc.frequency.setValueAtTime(620, now);
       osc.frequency.setValueAtTime(880, now + 0.08);
-      gain.gain.setValueAtTime(0.14, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-      osc.start(now);
-      osc.stop(now + 0.25);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+      osc.start(now); osc.stop(now + 0.22);
     } else if (type === 'msg_out') {
-      // Subtle send whoosh-pop
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(420, now);
-      osc.frequency.exponentialRampToValueAtTime(720, now + 0.09);
-      gain.gain.setValueAtTime(0.09, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
-      osc.start(now);
-      osc.stop(now + 0.11);
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.exponentialRampToValueAtTime(700, now + 0.08);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+      osc.start(now); osc.stop(now + 0.1);
     } else if (type === 'notif') {
-      // Pleasant notification chime
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(659.25, now);
-      osc.frequency.setValueAtTime(987.77, now + 0.1);
-      gain.gain.setValueAtTime(0.14, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-      osc.start(now);
-      osc.stop(now + 0.35);
+      osc.frequency.setValueAtTime(987.77, now + 0.12);
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+      osc.start(now); osc.stop(now + 0.3);
     } else if (type === 'ring') {
-      // Incoming call tone
       osc.type = 'sine';
       osc.frequency.setValueAtTime(523.25, now);
       osc.frequency.setValueAtTime(659.25, now + 0.15);
       osc.frequency.setValueAtTime(783.99, now + 0.3);
-      gain.gain.setValueAtTime(0.18, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
-      osc.start(now);
-      osc.stop(now + 0.6);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+      osc.start(now); osc.stop(now + 0.55);
     }
   } catch (_) {}
 }
@@ -320,7 +225,7 @@ function playSound(type) {
 const T = {
   en: {
     byline: 'from matmusoevs team',
-    tagline: 'Express your real emotions, share moments, and connect in real time.',
+    tagline: 'Express real emotions, share moments, and connect in real time.',
     loginTitle: 'Sign in to Moodgram',
     registerTitle: 'Create Moodgram Account',
     recoverTitle: 'Recover Account',
@@ -329,7 +234,7 @@ const T = {
     confirmPassword: 'Confirm Password',
     firstName: 'First Name',
     lastName: 'Last Name',
-    choosePhoto: 'Choose Profile Picture (Optional)',
+    choosePhoto: 'Choose Profile Picture',
     signIn: 'Sign In',
     createAccount: 'Create Account',
     googleSignIn: 'Continue with Google',
@@ -338,7 +243,7 @@ const T = {
     haveAccount: 'Already have an account? Sign In',
     recoverHint: 'Enter your Moodgram @username to receive a password reset link.',
     sendReset: 'Send Recovery Link',
-    resetSent: 'If this username exists, a recovery link was sent to its email.',
+    resetSent: 'If username exists, recovery link was sent to its email.',
     backToLogin: 'Back to Login',
     completeProfile: 'Choose Your Moodgram Username',
     saveProfile: 'Complete Setup',
@@ -354,7 +259,7 @@ const T = {
     newPost: 'Create Post',
     shareMood: 'Share Mood',
     writeCaption: 'Write a caption, use #hashtags or @mentions...',
-    imageUrlPh: 'Image URL (optional) or upload photo below',
+    imageUrlPh: 'Image URL or upload photo below',
     locationPh: 'Location (e.g., Dushanbe)',
     publish: 'Publish',
     addComment: 'Add a comment...',
@@ -364,11 +269,11 @@ const T = {
     howFeeling: 'How are you feeling right now?',
     moodExplainPh: 'Explain your mood in a few words...',
     postMood: 'Publish Mood',
-    noMoods: 'No moods shared yet. Express how you feel!',
+    noMoods: 'No moods shared yet.',
     noFriendsMood: 'None of your followed friends have posted a mood yet.',
-    searchPh: 'Search @username, name, or #hashtag...',
-    suggestedPeople: 'Suggested Creators',
-    nobodyFound: 'No matching users found.',
+    searchPh: 'Search @username or name...',
+    suggestedPeople: 'Search Results',
+    nobodyFound: 'No users found.',
     follow: 'Follow',
     following: 'Following',
     followers: 'Followers',
@@ -381,45 +286,26 @@ const T = {
     online: 'Online',
     offline: 'Offline',
     lastSeen: 'Last seen',
-    recording: 'Recording audio... Tap mic to send',
-    noChats: 'Follow someone or open a profile to start messaging.',
+    recording: 'Recording audio...',
+    noChats: 'Open a profile or search to start messaging.',
     calling: 'Calling...',
     incomingCall: 'Incoming Moodgram Call',
     voiceCall: 'Audio Call',
     videoCall: 'Video Call',
-    verificationTitle: 'Moodgram Verification & Premium',
-    freePromoTitle: 'First 30 Users — Free 1-Year Badge',
-    freePromoDesc: 'The first 30 registered creators receive an official blue Moodgram verification badge free for 1 year.',
-    claimFreeBadge: 'Claim Free 1-Year Badge',
-    badgeActive: 'Official Moodgram Badge Active',
-    premiumTitle: 'Moodgram Verified Subscription',
-    premiumPrice: '$20 USD / year',
-    premiumDesc: 'Get the blue Moodgram badge next to your name across posts, moods, comments, and messages.',
-    subscribeNow: 'Subscribe ($20/year)',
-    paymentPending: 'Payment verification pending administrator/provider confirmation.',
     appearance: 'Appearance',
     dark: 'Dark',
     light: 'Light',
     language: 'Language',
-    soundEffects: 'Message & Notification Sounds',
+    soundEffects: 'Message & Call Sounds',
     aboutApp: 'About Moodgram',
-    aboutDesc: 'Moodgram is a next-generation social platform created by Matmusoevs where real human emotions (Mood) replace short-video feeds.',
-    errConfig: 'Paste your Firebase config keys in index.html to connect the live backend.',
-    errFields: 'Please fill in all required fields.',
-    errPassMatch: 'Passwords do not match.',
-    errPassLen: 'Password must be at least 6 characters.',
-    errUsername: 'Username must be 3–20 lowercase letters, numbers, or underscores.',
-    errUserTaken: 'This @username is already taken.',
-    errUserNotFound: 'No account found with that @username.',
-    errGeneric: 'Operation failed. Please try again.',
-    toastSaved: 'Changes saved successfully!',
-    toastPosted: 'Published to Moodgram!',
-    toastClaimed: 'Congratulations! Your 1-year Moodgram Badge is active!',
-    logout: 'Log Out'
+    aboutDesc: 'Moodgram — next-generation social platform created by Matmusoevs.',
+    logout: 'Log Out',
+    editMessage: 'Edit Message',
+    deleteMessage: 'Delete Message'
   },
   ru: {
     byline: 'from matmusoevs team',
-    tagline: 'Делитесь настоящими эмоциями, моментами и общайтесь в реальном времени.',
+    tagline: 'Делитесь настоящими эмоциями и общайтесь в реальном времени.',
     loginTitle: 'Вход в Moodgram',
     registerTitle: 'Регистрация в Moodgram',
     recoverTitle: 'Восстановление аккаунта',
@@ -428,16 +314,16 @@ const T = {
     confirmPassword: 'Подтвердите пароль',
     firstName: 'Имя',
     lastName: 'Фамилия',
-    choosePhoto: 'Выбрать фото профиля (необязательно)',
+    choosePhoto: 'Фото профиля',
     signIn: 'Войти',
     createAccount: 'Создать аккаунт',
     googleSignIn: 'Продолжить через Google',
     forgotPass: 'Забыли пароль?',
     noAccount: 'Нет аккаунта? Зарегистрироваться',
     haveAccount: 'Уже есть аккаунт? Войти',
-    recoverHint: 'Введите ваш @username в Moodgram, чтобы получить ссылку для сброса пароля.',
+    recoverHint: 'Введите ваш @username в Moodgram для сброса пароля.',
     sendReset: 'Отправить ссылку',
-    resetSent: 'Если этот username существует, ссылка отправлена на привязанный email.',
+    resetSent: 'Ссылка для сброса отправлена на почту.',
     backToLogin: 'Назад ко входу',
     completeProfile: 'Выберите уникальный @username',
     saveProfile: 'Завершить настройку',
@@ -452,22 +338,22 @@ const T = {
     addStory: 'Ваша история',
     newPost: 'Создать пост',
     shareMood: 'Поделиться Mood',
-    writeCaption: 'Напишите подпись, используйте #хештеги или @упоминания...',
-    imageUrlPh: 'Ссылка на фото или загрузите файл ниже',
-    locationPh: 'Местоположение (например, Душанбе)',
+    writeCaption: 'Напишите подпись, #хештеги или @упоминания...',
+    imageUrlPh: 'Ссылка на фото или загрузите файл',
+    locationPh: 'Местоположение',
     publish: 'Опубликовать',
     addComment: 'Добавьте комментарий...',
     allPosts: 'Публикации',
-    noPosts: 'Публикаций пока нет. Подпишитесь на друзей или создайте первый пост!',
+    noPosts: 'Публикаций пока нет.',
     moodCenter: 'Лента Mood',
     howFeeling: 'Что вы сейчас чувствуете?',
-    moodExplainPh: 'Опишите своё настроение в нескольких словах...',
+    moodExplainPh: 'Опишите своё настроение...',
     postMood: 'Опубликовать Mood',
-    noMoods: 'Записей Mood пока нет. Поделитесь своими эмоциями!',
-    noFriendsMood: 'Ваши друзья ещё не опубликовали своё настроение.',
-    searchPh: 'Поиск по @username, имени или #хештегу...',
-    suggestedPeople: 'Рекомендуемые авторы',
-    nobodyFound: 'Ничего не найдено.',
+    noMoods: 'Записей Mood пока нет.',
+    noFriendsMood: 'Ваши друзья ещё не опубликовали настроение.',
+    searchPh: 'Введите @username или имя для поиска...',
+    suggestedPeople: 'Результаты поиска',
+    nobodyFound: 'Пользователи не найдены.',
     follow: 'Подписаться',
     following: 'Вы подписаны',
     followers: 'Подписчики',
@@ -480,41 +366,22 @@ const T = {
     online: 'В сети',
     offline: 'Не в сети',
     lastSeen: 'Был(а) в сети',
-    recording: 'Запись голоса... Нажмите микрофон для отправки',
-    noChats: 'Подпишитесь на пользователей или откройте профиль, чтобы написать.',
+    recording: 'Идет запись...',
+    noChats: 'Найдите пользователя или откройте профиль, чтобы написать.',
     calling: 'Вызов...',
     incomingCall: 'Входящий звонок Moodgram',
     voiceCall: 'Аудиозвонок',
     videoCall: 'Видеозвонок',
-    verificationTitle: 'Верификация и Premium Moodgram',
-    freePromoTitle: 'Первым 30 пользователям — галочка бесплатно на 1 год',
-    freePromoDesc: 'Первые 30 зарегистрированных пользователей получают фирменную синюю галочку Moodgram бесплатно на 1 год.',
-    claimFreeBadge: 'Получить галочку на 1 год',
-    badgeActive: 'Официальная галочка Moodgram активна',
-    premiumTitle: 'Подписка Moodgram Verified',
-    premiumPrice: '$20 USD / год',
-    premiumDesc: 'Синяя галочка Moodgram рядом с вашим именем в постах, Mood, комментариях и чатах.',
-    subscribeNow: 'Оформить ($20/год)',
-    paymentPending: 'Ожидание подтверждения оплаты платёжным провайдером или администратором.',
     appearance: 'Оформление',
     dark: 'Тёмная',
     light: 'Светлая',
     language: 'Язык',
-    soundEffects: 'Звуки сообщений и уведомлений',
+    soundEffects: 'Звуки сообщений и звонков',
     aboutApp: 'О Moodgram',
-    aboutDesc: 'Moodgram — современная социальная сеть от Matmusoevs, где живые эмоции (Mood) полностью заменяют ленту коротких видео.',
-    errConfig: 'Укажите ключи Firebase в коде index.html для подключения базы данных.',
-    errFields: 'Пожалуйста, заполните все обязательные поля.',
-    errPassMatch: 'Пароли не совпадают.',
-    errPassLen: 'Пароль должен содержать минимум 6 символов.',
-    errUsername: 'Username: 3–20 строчных латинских букв, цифр или _.',
-    errUserTaken: 'Этот @username уже занят.',
-    errUserNotFound: 'Аккаунт с таким @username не найден.',
-    errGeneric: 'Произошла ошибка. Попробуйте ещё раз.',
-    toastSaved: 'Изменения сохранены!',
-    toastPosted: 'Опубликовано в Moodgram!',
-    toastClaimed: 'Поздравляем! Ваша галочка Moodgram активирована на 1 год!',
-    logout: 'Выйти'
+    aboutDesc: 'Moodgram — социальная сеть нового поколения от Matmusoevs.',
+    logout: 'Выйти',
+    editMessage: 'Изменить',
+    deleteMessage: 'Удалить'
   }
 };
 
@@ -526,9 +393,7 @@ const MOOD_LIST = [
   { emoji: '❤️', en: 'Grateful', ru: 'Благодарен' },
   { emoji: '😎', en: 'Confident', ru: 'Уверен' },
   { emoji: '😴', en: 'Tired', ru: 'Устал' },
-  { emoji: '🥰', en: 'Loved', ru: 'Влюблён' },
-  { emoji: '🤔', en: 'Thinking', ru: 'Задумался' },
-  { emoji: '🎉', en: 'Excited', ru: 'В восторге' }
+  { emoji: '🥰', en: 'Loved', ru: 'Влюблён' }
 ];
 
 let lang = localStorage.getItem('mg_lang') || 'en';
@@ -536,14 +401,14 @@ let theme = localStorage.getItem('mg_theme') || 'dark';
 const tr = k => (T[lang] && T[lang][k]) || T.en[k] || k;
 
 /* ============================================================================
-   5. STATE & HELPERS
+   5. STATE & STATE PERSISTENCE
    ============================================================================ */
 const state = {
   user: null,
   profile: null,
   authMode: 'login',
   regPhotoData: '',
-  tab: 'home',
+  tab: localStorage.getItem('mg_last_tab') || 'home',
   viewUserId: null,
   profilesCache: new Map(),
   followingIds: [],
@@ -557,18 +422,18 @@ const state = {
   chatWith: null,
   messages: [],
   draftMsg: '',
+  editingMsgId: null,
   searchQuery: '',
-  badgeCountUsed: 0,
   busy: false,
   error: '',
   activeModal: null,
   selectedMood: MOOD_LIST[0].emoji,
   moodDraft: '',
-  editingMoodId: null,
   postCaption: '',
   postImageUrl: '',
   postLocation: '',
   postImageData: '',
+  storyMusic: '',
   openCommentsFor: null,
   isRecording: false,
   mediaRecorder: null,
@@ -599,15 +464,14 @@ function timeAgo(ms) {
 }
 
 /* ============================================================================
-   6. REALTIME ONLINE / OFFLINE PRESENCE ENGINE
+   6. REALTIME ONLINE / OFFLINE PRESENCE SYSTEM
    ============================================================================ */
 let presenceTimer = null;
 
 function isUserTrulyOnline(u) {
   if (!u || !u.online) return false;
   if (!u.lastSeen || !u.lastSeen.toMillis) return !!u.online;
-  // Considered online only if heartbeat was received in last 50 seconds
-  return (Date.now() - u.lastSeen.toMillis()) < 50000;
+  return (Date.now() - u.lastSeen.toMillis()) < 55000;
 }
 
 function getPresenceLabel(u) {
@@ -615,17 +479,12 @@ function getPresenceLabel(u) {
     return `<span class="inline-flex items-center gap-1.5 text-emerald-400 font-medium"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>${tr('online')}</span>`;
   }
   const seenMs = (u && u.lastSeen && u.lastSeen.toMillis) ? u.lastSeen.toMillis() : 0;
-  return `<span class="muted">${tr('offline')}${seenMs ? ' · ' + tr('lastSeen') + ' ' + timeAgo(seenMs) : ''}</span>`;
+  return `<span class="muted">${tr('offline')}${seenMs ? ' · ' + timeAgo(seenMs) : ''}</span>`;
 }
 
 async function setPresence(isOnline) {
   if (!db || !state.user) return;
-  try {
-    await db.collection('users').doc(state.user.uid).update({
-      online: isOnline,
-      lastSeen: TS()
-    });
-  } catch (_) {}
+  try { await db.collection('users').doc(state.user.uid).update({ online: isOnline, lastSeen: TS() }); } catch (_) {}
 }
 
 function startPresenceHeartbeat() {
@@ -641,12 +500,10 @@ function stopPresenceHeartbeat() {
 }
 
 document.addEventListener('visibilitychange', () => {
-  if (!state.user || !state.profile) return;
+  if (!state.user) return;
   if (document.visibilityState === 'hidden') setPresence(false);
   else setPresence(true);
 });
-
-window.addEventListener('pagehide', () => { if (state.user) setPresence(false); });
 window.addEventListener('beforeunload', () => { if (state.user) setPresence(false); });
 
 function showToast(msg) {
@@ -674,7 +531,6 @@ function logoSVG(sizeClass = 'w-9 h-9') {
 
 function verificationBadge(userObj, size = 16) {
   if (!userObj || !userObj.verified) return '';
-  if (userObj.badgeExpiresAt && userObj.badgeExpiresAt.toMillis && userObj.badgeExpiresAt.toMillis() < Date.now()) return '';
   return `
     <span title="Moodgram Verified" class="inline-flex items-center justify-center align-middle ml-1 shrink-0">
       <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none">
@@ -684,9 +540,9 @@ function verificationBadge(userObj, size = 16) {
     </span>`;
 }
 
-function avatarHTML(u, size = 'w-11 h-11', textSize = 'text-base', showOnlineDot = false) {
-  const onlineNow = showOnlineDot && isUserTrulyOnline(u);
-  const dot = onlineNow ? `<span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#0e1322]"></span>` : '';
+function avatarHTML(u, size = 'w-11 h-11', textSize = 'text-base', showDot = false) {
+  const onlineNow = showDot && isUserTrulyOnline(u);
+  const dot = onlineNow ? `<span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#0d1224]"></span>` : '';
   if (u && u.photo) {
     return `<div class="relative shrink-0 ${size}"><img src="${esc(u.photo)}" alt="" class="w-full h-full rounded-full object-cover border border-white/10">${dot}</div>`;
   }
@@ -738,7 +594,7 @@ async function ensureProfiles(uids) {
 }
 
 /* ============================================================================
-   7. AUTHENTICATION
+   7. AUTHENTICATION & PERSISTENCE
    ============================================================================ */
 if (CONFIGURED && auth) {
   auth.onAuthStateChanged(async user => {
@@ -804,28 +660,11 @@ async function handleRegister(e) {
     const fullName = firstName + ' ' + lastName;
 
     await db.runTransaction(async tx => {
-      const uRef = db.collection('usernames').doc(username);
-      const promoRef = db.collection('meta').doc('badge_promo');
-      const uSnap = await tx.get(uRef);
-      if (uSnap.exists) throw new Error('USERNAME_TAKEN');
-
-      const pSnap = await tx.get(promoRef);
-      const allocated = pSnap.exists ? (pSnap.data().allocatedCount || 0) : 0;
-      const getsFreeBadge = allocated < APP_CONFIG.FREE_BADGE_LIMIT;
-      const oneYearFromNow = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000));
-
-      tx.set(uRef, { uid, email, createdAt: TS() });
-      if (getsFreeBadge) {
-        tx.set(promoRef, { allocatedCount: allocated + 1 }, { merge: true });
-        tx.set(db.collection('badge_allocations').doc(uid), { uid, type: 'free_first_30', allocatedAt: TS(), expiresAt: oneYearFromNow });
-      }
+      tx.set(db.collection('usernames').doc(username), { uid, email, createdAt: TS() });
       tx.set(db.collection('users').doc(uid), {
         firstName, lastName, name: fullName, username, email, dob,
         language: prefLang, bio: '', website: '', photo: state.regPhotoData || '',
-        isPrivate: false, verified: getsFreeBadge,
-        badgeType: getsFreeBadge ? 'free_first_30' : 'none',
-        badgeExpiresAt: getsFreeBadge ? oneYearFromNow : null,
-        savedPosts: [], online: true, lastSeen: TS(), createdAt: TS()
+        isPrivate: false, verified: false, savedPosts: [], online: true, lastSeen: TS(), createdAt: TS()
       });
     });
 
@@ -884,24 +723,11 @@ async function handleCompleteGoogleProfile(e) {
     const uid = state.user.uid;
     const email = state.user.email || '';
     await db.runTransaction(async tx => {
-      const uRef = db.collection('usernames').doc(username);
-      const promoRef = db.collection('meta').doc('badge_promo');
-      const uSnap = await tx.get(uRef);
-      if (uSnap.exists) throw new Error('USERNAME_TAKEN');
-
-      const pSnap = await tx.get(promoRef);
-      const allocated = pSnap.exists ? (pSnap.data().allocatedCount || 0) : 0;
-      const getsFreeBadge = allocated < APP_CONFIG.FREE_BADGE_LIMIT;
-      const oneYearFromNow = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000));
-
-      tx.set(uRef, { uid, email, createdAt: TS() });
-      if (getsFreeBadge) tx.set(promoRef, { allocatedCount: allocated + 1 }, { merge: true });
+      tx.set(db.collection('usernames').doc(username), { uid, email, createdAt: TS() });
       tx.set(db.collection('users').doc(uid), {
         firstName, lastName, name: (firstName + ' ' + lastName).trim(),
         username, email, language: lang, bio: '', website: '',
-        photo: state.user.photoURL || '', isPrivate: false,
-        verified: getsFreeBadge, badgeType: getsFreeBadge ? 'free_first_30' : 'none',
-        badgeExpiresAt: getsFreeBadge ? oneYearFromNow : null,
+        photo: state.user.photoURL || '', isPrivate: false, verified: false,
         savedPosts: [], online: true, lastSeen: TS(), createdAt: TS()
       });
     });
@@ -942,7 +768,7 @@ async function logoutUser() {
 }
 
 /* ============================================================================
-   8. REALTIME LISTENERS (WITH SOUND TRIGGERS)
+   8. REALTIME LISTENERS & SOUNDS
    ============================================================================ */
 function addSub(unsub) { state.unsubs.push(unsub); }
 function cleanupSubscriptions() {
@@ -962,11 +788,6 @@ function initRealtimeListeners() {
       state.profilesCache.set(uid, state.profile);
       render();
     }
-  }));
-
-  addSub(db.collection('meta').doc('badge_promo').onSnapshot(doc => {
-    state.badgeCountUsed = doc.exists ? (doc.data().allocatedCount || 0) : 0;
-    render();
   }));
 
   addSub(db.collection('follows').where('followerId', '==', uid).onSnapshot(snap => {
@@ -1021,7 +842,7 @@ function initRealtimeListeners() {
     render();
   }));
 
-  addSub(db.collection('users').limit(50).onSnapshot(snap => {
+  addSub(db.collection('users').limit(60).onSnapshot(snap => {
     state.allUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     state.allUsers.forEach(u => state.profilesCache.set(u.id, u));
     render();
@@ -1040,16 +861,14 @@ async function pushNotification(toUid, type, text, refId = '') {
 }
 
 /* ============================================================================
-   9. MOOD & POSTS ACTIONS
+   9. POSTS, MOODS & STORIES ACTIONS
    ============================================================================ */
 function openMoodComposer(existingMood = null) {
   state.activeModal = 'mood';
   if (existingMood) {
-    state.editingMoodId = existingMood.id;
     state.selectedMood = existingMood.emoji;
     state.moodDraft = existingMood.text;
   } else {
-    state.editingMoodId = null;
     state.selectedMood = MOOD_LIST[0].emoji;
     state.moodDraft = '';
   }
@@ -1061,20 +880,11 @@ async function saveMoodPost() {
   if (!text) return showToast(tr('errFields'));
   const moodObj = MOOD_LIST.find(m => m.emoji === state.selectedMood) || MOOD_LIST[0];
   try {
-    if (state.editingMoodId) {
-      await db.collection('moods').doc(state.editingMoodId).update({
-        emoji: state.selectedMood, moodLabel: moodObj.en, text, updatedAt: TS()
-      });
-    } else {
-      await db.collection('moods').add({
-        uid: state.user.uid, emoji: state.selectedMood, moodLabel: moodObj.en,
-        text, likes: [], comments: [], createdAt: TS()
-      });
-      await db.collection('users').doc(state.user.uid).update({
-        latestMood: { emoji: state.selectedMood, text, updatedAt: TS() }
-      });
-    }
-    state.activeModal = null; state.moodDraft = ''; state.editingMoodId = null;
+    await db.collection('moods').add({
+      uid: state.user.uid, emoji: state.selectedMood, moodLabel: moodObj.en,
+      text, likes: [], comments: [], createdAt: TS()
+    });
+    state.activeModal = null; state.moodDraft = '';
     playSound('msg_out');
     showToast(tr('toastPosted'));
     render();
@@ -1088,7 +898,7 @@ async function toggleMoodLike(moodId) {
   await db.collection('moods').doc(moodId).update({
     likes: liked ? FV().arrayRemove(state.user.uid) : FV().arrayUnion(state.user.uid)
   });
-  if (!liked) pushNotification(m.uid, 'mood_like', 'liked your ' + m.emoji + ' Mood', moodId);
+  if (!liked) pushNotification(m.uid, 'mood_like', 'liked your Mood', moodId);
 }
 
 async function addMoodComment(moodId) {
@@ -1117,10 +927,9 @@ async function publishPost() {
   const image = state.postImageData || state.postImageUrl.trim();
   const location = state.postLocation.trim();
   if (!caption && !image) return showToast(tr('errFields'));
-  const hashtags = (caption.match(/#[a-zA-Z0-9_а-яА-ЯёЁ]+/g) || []).map(t => t.toLowerCase());
   try {
     await db.collection('posts').add({
-      uid: state.user.uid, caption, image, location, hashtags,
+      uid: state.user.uid, caption, image, location,
       likes: [], comments: [], createdAt: TS()
     });
     state.activeModal = null; state.postCaption = ''; state.postImageUrl = '';
@@ -1135,7 +944,8 @@ async function publishStory(input) {
   const file = input.files[0];
   if (!file) return;
   const dataUrl = await compressImageFile(file, 720, 0.8);
-  await db.collection('stories').add({ uid: state.user.uid, image: dataUrl, createdAt: TS() });
+  const music = prompt('Enter background music track name (optional):', 'Lofi Chill') || '';
+  await db.collection('stories').add({ uid: state.user.uid, image: dataUrl, music, createdAt: TS() });
   playSound('msg_out');
   showToast(tr('toastPosted'));
 }
@@ -1178,15 +988,13 @@ async function toggleFollow(targetUid) {
   if (isFollowing) {
     await db.collection('follows').doc(docId).delete();
   } else {
-    await db.collection('follows').doc(docId).set({
-      followerId: state.user.uid, followingId: targetUid, createdAt: TS()
-    });
+    await db.collection('follows').doc(docId).set({ followerId: state.user.uid, followingId: targetUid, createdAt: TS() });
     pushNotification(targetUid, 'follow', 'started following you');
   }
 }
 
 /* ============================================================================
-   10. REALTIME MESSAGING + CALL LOGS SAVED IN CHAT
+   10. CHAT, VOICE, EDIT, DELETE & TELEGRAM-STYLE CALLS
    ============================================================================ */
 function openConversation(targetUid) {
   state.tab = 'chats';
@@ -1221,6 +1029,13 @@ async function sendChatMessage(e) {
   if (!text || !state.chatWith) return;
   const cid = pairId(state.user.uid, state.chatWith);
   const convRef = db.collection('conversations').doc(cid);
+
+  if (state.editingMsgId) {
+    await convRef.collection('messages').doc(state.editingMsgId).update({ text, edited: true });
+    state.editingMsgId = null; state.draftMsg = '';
+    playSound('msg_out');
+    return render();
+  }
 
   state.draftMsg = '';
   playSound('msg_out');
@@ -1273,7 +1088,18 @@ async function toggleVoiceRecording() {
   } catch (err) { showToast('Microphone permission required.'); }
 }
 
-// Save Call Record directly into the chat history
+async function deleteMessage(msgId) {
+  if (!confirm('Delete this message?')) return;
+  const cid = pairId(state.user.uid, state.chatWith);
+  await db.collection('conversations').doc(cid).collection('messages').doc(msgId).delete();
+}
+
+async function startEditMessage(msgId, currentText) {
+  state.editingMsgId = msgId;
+  state.draftMsg = currentText;
+  render();
+}
+
 async function logCallToChat(peerUid, callType, callStatus, durationSec = 0) {
   if (!db || !state.user || !peerUid) return;
   const cid = pairId(state.user.uid, peerUid);
@@ -1286,22 +1112,17 @@ async function logCallToChat(peerUid, callType, callStatus, durationSec = 0) {
   try {
     await convRef.set({ members: [state.user.uid, peerUid], lastMessage: summary, updatedAt: TS() }, { merge: true });
     await convRef.collection('messages').add({
-      senderId: state.user.uid,
-      receiverId: peerUid,
-      type: 'call',
-      callType,
-      callStatus,
-      duration: durText,
-      text: summary,
-      createdAt: TS()
+      senderId: state.user.uid, receiverId: peerUid, type: 'call', callType, callStatus, duration: durText, text: summary, createdAt: TS()
     });
   } catch (_) {}
 }
 
+/* WebRTC Telegram Call Engine with Switch Camera Support */
 const RTC_CONFIG = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 const rtcState = {
   id: null, peerUid: null, callType: 'audio', isCaller: false, connected: false,
-  pc: null, local: null, remote: null, unsubs: [], timer: null, ringTimer: null, seconds: 0
+  pc: null, local: null, remote: null, unsubs: [], timer: null, ringTimer: null, seconds: 0,
+  usingFrontCamera: true
 };
 
 function startCallTimer() {
@@ -1328,9 +1149,10 @@ async function startWebRTCCall(targetUid, callType) {
   rtcState.isCaller = true;
   rtcState.connected = false;
   rtcState.seconds = 0;
+  rtcState.usingFrontCamera = true;
 
   try {
-    rtcState.local = await navigator.mediaDevices.getUserMedia({ audio: true, video: callType === 'video' });
+    rtcState.local = await navigator.mediaDevices.getUserMedia({ audio: true, video: callType === 'video' ? { facingMode: 'user' } : false });
   } catch (err) {
     rtcState.id = null;
     return showToast('Camera/Microphone access denied.');
@@ -1341,8 +1163,7 @@ async function startWebRTCCall(targetUid, callType) {
   rtcState.local.getTracks().forEach(t => pc.addTrack(t, rtcState.local));
   pc.ontrack = e => {
     e.streams[0].getTracks().forEach(t => rtcState.remote.addTrack(t));
-    const rv = $('remote-video');
-    if (rv) rv.srcObject = rtcState.remote;
+    const rv = $('remote-video'); if (rv) rv.srcObject = rtcState.remote;
   };
   pc.onicecandidate = e => { if (e.candidate) callRef.collection('callerCandidates').add(e.candidate.toJSON()); };
   const offer = await pc.createOffer();
@@ -1392,15 +1213,14 @@ async function acceptIncomingCall() {
   const callRef = db.collection('calls').doc(rtcState.id);
   const data = (await callRef.get()).data();
   if (!data) return;
-  rtcState.local = await navigator.mediaDevices.getUserMedia({ audio: true, video: data.type === 'video' });
+  rtcState.local = await navigator.mediaDevices.getUserMedia({ audio: true, video: data.type === 'video' ? { facingMode: 'user' } : false });
   const pc = new RTCPeerConnection(RTC_CONFIG);
   rtcState.pc = pc;
   rtcState.remote = new MediaStream();
   rtcState.local.getTracks().forEach(t => pc.addTrack(t, rtcState.local));
   pc.ontrack = e => {
     e.streams[0].getTracks().forEach(t => rtcState.remote.addTrack(t));
-    const rv = $('remote-video');
-    if (rv) rv.srcObject = rtcState.remote;
+    const rv = $('remote-video'); if (rv) rv.srcObject = rtcState.remote;
   };
   pc.onicecandidate = e => { if (e.candidate) callRef.collection('calleeCandidates').add(e.candidate.toJSON()); };
   await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
@@ -1415,24 +1235,38 @@ async function acceptIncomingCall() {
   rtcState.unsubs.push(callRef.onSnapshot(s => { if (s.data() && s.data().status === 'ended') endWebRTCCall(false, 'ended'); }));
 }
 
+async function switchCamera() {
+  if (!rtcState.local) return;
+  rtcState.usingFrontCamera = !rtcState.usingFrontCamera;
+  try {
+    const newStream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: { facingMode: rtcState.usingFrontCamera ? 'user' : 'environment' }
+    });
+    const videoTrack = newStream.getVideoTracks()[0];
+    if (rtcState.pc) {
+      const sender = rtcState.pc.getSenders().find(s => s.track && s.track.kind === 'video');
+      if (sender) sender.replaceTrack(videoTrack);
+    }
+    rtcState.local = newStream;
+    const lv = $('local-video'); if (lv) lv.srcObject = newStream;
+  } catch (err) { showToast('Could not switch camera'); }
+}
+
 async function endWebRTCCall(updateDb = true, remoteStatus = 'ended') {
   const { id, peerUid, callType, isCaller, connected, seconds } = rtcState;
-  clearInterval(rtcState.timer);
-  clearInterval(rtcState.ringTimer);
-  rtcState.unsubs.forEach(u => u());
-  rtcState.unsubs = [];
+  clearInterval(rtcState.timer); clearInterval(rtcState.ringTimer);
+  rtcState.unsubs.forEach(u => u()); rtcState.unsubs = [];
   if (rtcState.pc) { rtcState.pc.close(); rtcState.pc = null; }
   if (rtcState.local) { rtcState.local.getTracks().forEach(t => t.stop()); rtcState.local = null; }
   rtcState.id = null;
   $('callroot').style.display = 'none';
   $('callroot').innerHTML = '';
 
-  // Caller writes the call record into the chat conversation so both users see it
   if (isCaller && peerUid) {
     const finalStatus = connected ? 'Completed' : (remoteStatus === 'declined' ? 'Declined' : 'Missed');
     await logCallToChat(peerUid, callType, finalStatus, seconds);
   }
-
   if (updateDb && id) {
     try {
       const st = (!isCaller && !connected) ? 'declined' : 'ended';
@@ -1445,21 +1279,22 @@ function renderCallOverlay(peer, type, statusText, isIncoming) {
   const root = $('callroot');
   root.style.display = 'flex';
   root.innerHTML = `
-    <div class="relative flex-1 flex flex-col items-center justify-center p-6">
-      <video id="remote-video" autoplay playsinline class="absolute inset-0 w-full h-full object-cover opacity-80"></video>
+    <div class="relative flex-1 flex flex-col items-center justify-center p-6 bg-black">
+      <video id="remote-video" autoplay playsinline class="absolute inset-0 w-full h-full object-cover opacity-90"></video>
       <video id="local-video" autoplay playsinline muted class="absolute top-5 right-5 w-28 h-40 rounded-2xl object-cover border border-white/20 z-10 ${type === 'video' ? '' : 'hidden'}"></video>
-      <div class="relative z-10 text-center space-y-3 bg-black/55 backdrop-blur-md px-8 py-6 rounded-3xl border border-white/10">
+      <div class="relative z-10 text-center space-y-3 bg-black/60 backdrop-blur-md px-8 py-6 rounded-3xl border border-white/10">
         ${avatarHTML(peer, 'w-24 h-24 mx-auto', 'text-3xl')}
         <h3 class="text-xl font-bold">${esc(peer.name)}</h3>
         <p id="call-timer" class="text-sm text-blue-300 font-mono">${esc(statusText)}</p>
       </div>
     </div>
-    <div class="p-8 flex justify-center gap-8 bg-black/80 z-10">
+    <div class="p-6 flex justify-center items-center gap-6 bg-[#080b14] z-10">
+      ${type === 'video' ? `<button onclick="switchCamera()" class="px-4 py-3 rounded-2xl bg-white/10 font-semibold text-xs flex items-center gap-2">📷 Switch Camera</button>` : ''}
       ${isIncoming ? `
-        <button onclick="endWebRTCCall(true)" class="w-16 h-16 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-lg">✕</button>
+        <button onclick="endWebRTCCall(true)" class="w-16 h-16 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-lg text-lg">✕</button>
         <button onclick="acceptIncomingCall()" class="w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-lg">${ICONS.phone()}</button>
       ` : `
-        <button onclick="endWebRTCCall(true)" class="w-16 h-16 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-lg">✕</button>
+        <button onclick="endWebRTCCall(true)" class="w-16 h-16 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-lg text-lg">✕</button>
       `}
     </div>`;
   const lv = $('local-video'); if (lv && rtcState.local) lv.srcObject = rtcState.local;
@@ -1467,41 +1302,8 @@ function renderCallOverlay(peer, type, statusText, isIncoming) {
 }
 
 /* ============================================================================
-   11. VERIFICATION & SETTINGS
+   11. SETTINGS & PROFILE UPDATES
    ============================================================================ */
-async function claimPromotionalBadge() {
-  const uid = state.user.uid;
-  try {
-    await db.runTransaction(async tx => {
-      const promoRef = db.collection('meta').doc('badge_promo');
-      const userRef = db.collection('users').doc(uid);
-      const allocRef = db.collection('badge_allocations').doc(uid);
-      const [pSnap, uSnap, aSnap] = await Promise.all([tx.get(promoRef), tx.get(userRef), tx.get(allocRef)]);
-      if (aSnap.exists || (uSnap.exists && uSnap.data().verified)) throw new Error('ALREADY_VERIFIED');
-      const count = pSnap.exists ? (pSnap.data().allocatedCount || 0) : 0;
-      if (count >= APP_CONFIG.FREE_BADGE_LIMIT) throw new Error('LIMIT_REACHED');
-      const expires = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + 365 * 24 * 3600 * 1000));
-      tx.set(promoRef, { allocatedCount: count + 1 }, { merge: true });
-      tx.set(allocRef, { uid, type: 'free_first_30', allocatedAt: TS(), expiresAt: expires });
-      tx.update(userRef, { verified: true, badgeType: 'free_first_30', badgeExpiresAt: expires });
-    });
-    playSound('notif');
-    showToast(tr('toastClaimed'));
-  } catch (err) {
-    showToast(err.message === 'LIMIT_REACHED' ? 'All 30 free badges have been claimed.' : tr('errGeneric'));
-  }
-}
-
-async function initiatePremiumSubscription() {
-  const txRef = $('pay-ref') ? $('pay-ref').value.trim() : '';
-  await db.collection('payment_records').add({
-    uid: state.user.uid, amountUsd: APP_CONFIG.PREMIUM_PRICE_USD, currency: 'USD',
-    provider: APP_CONFIG.PAYMENT_PROVIDER, reference: txRef || 'PENDING_GATEWAY_WEBHOOK',
-    status: 'pending_verification', createdAt: TS()
-  });
-  showToast(tr('paymentPending'));
-}
-
 async function updateProfileDetails(e) {
   e.preventDefault();
   const firstName = $('ep-fname').value.trim();
@@ -1524,15 +1326,37 @@ async function updateAvatarPhoto(input) {
   showToast(tr('toastSaved'));
 }
 
+function toggleSoundEffects() {
+  soundEnabled = !soundEnabled;
+  localStorage.setItem('mg_sound', soundEnabled ? 'on' : 'off');
+  if (soundEnabled) playSound('notif');
+  render();
+}
+
+function setLang(newLang) {
+  lang = newLang;
+  localStorage.setItem('mg_lang', newLang);
+  if (db && state.user) db.collection('users').doc(state.user.uid).update({ language: newLang }).catch(() => {});
+  render();
+}
+
+function setTheme(newTheme) {
+  theme = newTheme;
+  localStorage.setItem('mg_theme', newTheme);
+  document.documentElement.classList.toggle('light', newTheme === 'light');
+  render();
+}
+
 /* ============================================================================
-   12. UI VIEWS (INSTAGRAM-GRADE MODERN DESIGN)
+   12. UI VIEWS (INSTAGRAM-TELEGRAM HYBRID DESIGN)
    ============================================================================ */
 function renderAuthScreen() {
-  if (!HAS_FIREBASE_SDK) {
-    return `<div class="card p-6 text-center space-y-3 my-12">${logoSVG('w-16 h-16 mx-auto')}<h2 class="text-xl font-bold">Connection Required</h2><p class="text-sm text-amber-400">Check your internet connection and reload.</p></div>`;
-  }
-  if (!CONFIGURED) {
-    return `<div class="card p-6 text-center space-y-4 my-12">${logoSVG('w-16 h-16 mx-auto')}<h2 class="text-xl font-bold">Moodgram Setup Required</h2><p class="text-sm text-amber-400 leading-relaxed">${tr('errConfig')}</p></div>`;
+  if (!HAS_FIREBASE_SDK || !CONFIGURED) {
+    return `<div class="card p-6 text-center space-y-4 my-12">
+      ${logoSVG('w-16 h-16 mx-auto')}
+      <h2 class="text-xl font-bold">Moodgram Setup Required</h2>
+      <p class="text-sm text-amber-400">Please paste your Firebase configuration keys into the code.</p>
+    </div>`;
   }
   if (state.authMode === 'complete_google') {
     const parts = (state.user.displayName || '').split(' ');
@@ -1544,7 +1368,6 @@ function renderAuthScreen() {
         <input id="g-username" placeholder="@username" class="input" required>
         <button ${state.busy ? 'disabled' : ''} class="btn w-full py-3">${tr('saveProfile')}</button>
       </form>
-      ${state.error ? `<p class="text-xs text-rose-400 text-center">${esc(state.error)}</p>` : ''}
     </div>`;
   }
   if (state.authMode === 'recover') {
@@ -1554,7 +1377,7 @@ function renderAuthScreen() {
         <input id="rec-user" placeholder="@username" class="input" required>
         <button ${state.busy ? 'disabled' : ''} class="btn w-full py-3">${tr('sendReset')}</button>
       </form>
-      <button onclick="state.authMode='login';state.error='';render()" class="w-full text-xs muted">${tr('backToLogin')}</button>
+      <button onclick="state.authMode='login';render()" class="w-full text-xs muted">${tr('backToLogin')}</button>
     </div>`;
   }
   if (state.authMode === 'register') {
@@ -1562,7 +1385,7 @@ function renderAuthScreen() {
       <div class="text-center space-y-2">${logoSVG('w-14 h-14 mx-auto')}<h2 class="text-xl font-bold">${tr('registerTitle')}</h2></div>
       <form onsubmit="handleRegister(event)" class="space-y-3">
         <div class="flex items-center gap-3">
-          ${state.regPhotoData ? `<img src="${state.regPhotoData}" class="w-12 h-12 rounded-full object-cover shrink-0">` : `<div class="w-12 h-12 rounded-full soft flex items-center justify-center shrink-0">${ICONS.camera()}</div>`}
+          ${state.regPhotoData ? `<img src="${state.regPhotoData}" class="w-12 h-12 rounded-full object-cover">` : `<div class="w-12 h-12 rounded-full soft flex items-center justify-center">${ICONS.camera()}</div>`}
           <label class="btn-ghost flex-1 text-center text-xs py-2.5 cursor-pointer">${tr('choosePhoto')}<input type="file" accept="image/*" hidden onchange="handleRegPhotoSelect(this)"></label>
         </div>
         <div class="grid grid-cols-2 gap-2">
@@ -1573,14 +1396,14 @@ function renderAuthScreen() {
         <input id="reg-email" type="email" placeholder="Email" class="input" required>
         <div class="grid grid-cols-2 gap-2">
           <input id="reg-dob" type="date" class="input" required>
-          <select id="reg-lang" class="input"><option value="en" ${lang === 'en' ? 'selected' : ''}>English</option><option value="ru" ${lang === 'ru' ? 'selected' : ''}>Русский</option></select>
+          <select id="reg-lang" class="input"><option value="en">English</option><option value="ru">Русский</option></select>
         </div>
         <input id="reg-pass" type="password" placeholder="${tr('password')}" class="input" required>
         <input id="reg-cpass" type="password" placeholder="${tr('confirmPassword')}" class="input" required>
         <button ${state.busy ? 'disabled' : ''} class="btn w-full py-3">${tr('createAccount')}</button>
       </form>
       ${state.error ? `<p class="text-xs text-rose-400 text-center">${esc(state.error)}</p>` : ''}
-      <button onclick="state.authMode='login';state.error='';render()" class="w-full text-xs text-blue-400 font-medium">${tr('haveAccount')}</button>
+      <button onclick="state.authMode='login';render()" class="w-full text-xs text-blue-400 font-medium">${tr('haveAccount')}</button>
     </div>`;
   }
   return `<div class="card p-6 space-y-4 my-8">
@@ -1588,13 +1411,13 @@ function renderAuthScreen() {
     <form onsubmit="handleLogin(event)" class="space-y-3">
       <input id="log-id" placeholder="${tr('emailOrUser')}" class="input" required>
       <input id="log-pass" type="password" placeholder="${tr('password')}" class="input" required>
-      <div class="text-right"><button type="button" onclick="state.authMode='recover';state.error='';render()" class="text-xs text-blue-400">${tr('forgotPass')}</button></div>
+      <div class="text-right"><button type="button" onclick="state.authMode='recover';render()" class="text-xs text-blue-400">${tr('forgotPass')}</button></div>
       <button ${state.busy ? 'disabled' : ''} class="btn w-full py-3">${tr('signIn')}</button>
     </form>
     <div class="relative py-1 text-center"><span class="text-[11px] uppercase muted px-2">OR</span></div>
     <button onclick="handleGoogleLogin()" class="btn-ghost w-full py-3 flex items-center justify-center gap-2"><b>G</b> ${tr('googleSignIn')}</button>
     ${state.error ? `<p class="text-xs text-rose-400 text-center">${esc(state.error)}</p>` : ''}
-    <button onclick="state.authMode='register';state.error='';render()" class="w-full text-xs text-blue-400 font-medium pt-1">${tr('noAccount')}</button>
+    <button onclick="state.authMode='register';render()" class="w-full text-xs text-blue-400 font-medium pt-1">${tr('noAccount')}</button>
   </div>`;
 }
 
@@ -1604,7 +1427,7 @@ function renderHomeView() {
       <label class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer">
         <div class="relative w-16 h-16">
           ${avatarHTML(state.profile, 'w-16 h-16')}
-          <span class="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold border-2 border-[#060913]">+</span>
+          <span class="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold border-2 border-[#0d1224]">+</span>
         </div>
         <span class="text-[11px] muted">${tr('addStory')}</span>
         <input type="file" accept="image/*" hidden onchange="publishStory(this)">
@@ -1652,9 +1475,8 @@ function renderHomeView() {
             <button onclick="openConversation('${p.uid}')" class="icon-btn">${ICONS.share()}</button>
             <button onclick="toggleSavePost('${p.id}')" class="icon-btn ml-auto">${ICONS.bookmark(saved)}</button>
           </div>
-          ${(p.likes || []).length ? `<div class="text-xs font-bold">${(p.likes || []).length} ${lang === 'ru' ? 'отметок «Нравится»' : 'likes'}</div>` : ''}
+          ${(p.likes || []).length ? `<div class="text-xs font-bold">${(p.likes || []).length} likes</div>` : ''}
           ${p.caption ? `<p class="text-sm leading-relaxed"><span class="font-semibold mr-1.5">${esc(author.username)}</span>${formatRichText(p.caption)}</p>` : ''}
-          ${(p.comments || []).length && !commentsOpen ? `<button onclick="state.openCommentsFor='${p.id}';render()" class="text-xs muted block">${lang === 'ru' ? 'Посмотреть все комментарии' : 'View all'} (${(p.comments || []).length})</button>` : ''}
           ${commentsOpen ? `
             <div class="pt-2.5 border-t line space-y-2">
               <div class="space-y-1.5 max-h-40 overflow-y-auto">
@@ -1733,8 +1555,11 @@ function handleExploreSearchInput(val) {
 
 function buildExploreResultsHTML() {
   const q = state.searchQuery.trim().toLowerCase();
+  if (!q) {
+    return `<div class="card p-12 text-center text-sm muted">Search for users by typing @username or name...</div>`;
+  }
   const cleanQ = q.replace(/^@/, '');
-  const matchingUsers = state.allUsers.filter(u => u.id !== state.user.uid && !state.blockedIds.includes(u.id) && (!q || (u.name || '').toLowerCase().includes(cleanQ) || (u.username || '').toLowerCase().includes(cleanQ))).slice(0, 20);
+  const matchingUsers = state.allUsers.filter(u => u.id !== state.user.uid && !state.blockedIds.includes(u.id) && ((u.name || '').toLowerCase().includes(cleanQ) || (u.username || '').toLowerCase().includes(cleanQ))).slice(0, 20);
   return `
     <div class="space-y-2.5">
       <div class="text-xs uppercase font-semibold muted">${tr('suggestedPeople')}</div>
@@ -1799,13 +1624,21 @@ function renderChatsView() {
                 </div>`;
             }
             return `
-              <div class="flex flex-col ${mine ? 'items-end' : 'items-start'}">
-                <div class="max-w-[78%] px-3.5 py-2.5 rounded-2xl text-sm ${mine ? 'grad text-white' : 'card'}">
+              <div class="flex flex-col ${mine ? 'items-end' : 'items-start'} group">
+                <div class="max-w-[78%] px-3.5 py-2.5 rounded-2xl text-sm ${mine ? 'grad text-white' : 'card'} relative">
                   ${m.type === 'image' && m.image ? `<img src="${esc(m.image)}" class="rounded-xl max-h-60 mb-1">` : ''}
                   ${m.type === 'audio' && m.audio ? `<audio controls src="${esc(m.audio)}" class="max-w-[220px] h-9"></audio>` : ''}
                   ${m.type === 'text' ? `<div class="break-words">${esc(m.text)}</div>` : ''}
-                  <div class="text-[10px] opacity-70 mt-1 text-right">${timeAgo(tsToMs(m))}</div>
+                  <div class="text-[10px] opacity-70 mt-1 flex items-center justify-end gap-1.5">
+                    ${m.edited ? '<span>(edited)</span>' : ''}
+                    <span>${timeAgo(tsToMs(m))}</span>
+                  </div>
                 </div>
+                ${mine ? `
+                  <div class="flex gap-2 text-[10px] muted mt-0.5 opacity-0 group-hover:opacity-100 transition px-1">
+                    <button onclick="startEditMessage('${m.id}', '${esc(m.text)}')" class="hover:text-blue-400">Edit</button>
+                    <button onclick="deleteMessage('${m.id}')" class="hover:text-rose-400">Delete</button>
+                  </div>` : ''}
               </div>`;
           }).join('')}
         </div>
@@ -1814,7 +1647,7 @@ function renderChatsView() {
           <label class="btn-ghost p-2.5 rounded-full cursor-pointer icon-btn">${ICONS.camera()}<input type="file" accept="image/*" hidden onchange="sendChatImage(this)"></label>
           <button type="button" onclick="toggleVoiceRecording()" class="btn-ghost p-2.5 rounded-full icon-btn ${state.isRecording ? 'bg-rose-600 text-white' : ''}">${ICONS.mic()}</button>
           <input value="${esc(state.draftMsg)}" oninput="state.draftMsg=this.value" placeholder="${tr('typeMsg')}" class="input flex-1">
-          <button type="submit" class="btn px-4 py-2.5">${ICONS.share()}</button>
+          <button type="submit" class="btn px-4 py-2.5">${state.editingMsgId ? 'Save' : ICONS.share()}</button>
         </form>
       </div>`;
   }
@@ -1856,13 +1689,12 @@ function renderProfileView(targetUid = null) {
       </div>
       <div class="grid grid-cols-3 text-center py-2.5 border-y line">
         <div><div class="font-bold text-base">${userPosts.length}</div><div class="text-[11px] muted">${tr('allPosts')}</div></div>
-        <div><div class="font-bold text-base">${isMe ? state.followerIds.length : '—'}</div><div class="text-[11px] muted">${tr('followers')}</div></div>
-        <div><div class="font-bold text-base">${isMe ? state.followingIds.length : '—'}</div><div class="text-[11px] muted">${tr('following')}</div></div>
+        <div><div class="font-bold text-base">${state.followerIds.length}</div><div class="text-[11px] muted">${tr('followers')}</div></div>
+        <div><div class="font-bold text-base">${state.followingIds.length}</div><div class="text-[11px] muted">${tr('following')}</div></div>
       </div>
       ${isMe ? `
         <div class="flex gap-2">
           <button onclick="state.activeModal='edit_profile';render()" class="btn-ghost flex-1 py-2 text-xs">${tr('editProfile')}</button>
-          <button onclick="state.tab='verification';render()" class="btn flex-1 py-2 text-xs">Verification</button>
         </div>` : `
         <div class="flex gap-2">
           <button onclick="toggleFollow('${u.id}')" class="${isFollowing ? 'btn-ghost' : 'btn'} flex-1 py-2 text-xs">${isFollowing ? tr('following') : tr('follow')}</button>
@@ -1885,38 +1717,11 @@ function openUserProfile(uid) {
   render();
 }
 
-function renderVerificationView() {
-  const remaining = Math.max(0, APP_CONFIG.FREE_BADGE_LIMIT - state.badgeCountUsed);
-  const isVerified = !!state.profile.verified;
-  return `<div class="space-y-5">
-    <h2 class="text-xl font-bold">${tr('verificationTitle')}</h2>
-    ${isVerified ? `<div class="card p-5 border-blue-500/50 bg-blue-950/20 font-bold text-blue-400">✔ ${tr('badgeActive')}</div>` : ''}
-    <div class="card p-5 space-y-3">
-      <div class="flex items-center justify-between"><h3 class="font-bold text-sm text-blue-400">${tr('freePromoTitle')}</h3><span class="soft px-2.5 py-1 rounded-full text-xs font-bold">${remaining} / ${APP_CONFIG.FREE_BADGE_LIMIT}</span></div>
-      <p class="text-xs muted leading-relaxed">${tr('freePromoDesc')}</p>
-      ${!isVerified && remaining > 0 ? `<button onclick="claimPromotionalBadge()" class="btn w-full py-3">${tr('claimFreeBadge')}</button>` : ''}
-    </div>
-    <div class="card p-5 space-y-3">
-      <div class="flex items-center justify-between"><h3 class="font-bold text-sm">${tr('premiumTitle')}</h3><span class="text-sm font-extrabold text-purple-400">${tr('premiumPrice')}</span></div>
-      <p class="text-xs muted leading-relaxed">${tr('premiumDesc')}</p>
-      <input id="pay-ref" placeholder="Transaction / Receipt Reference" class="input text-xs">
-      <button onclick="initiatePremiumSubscription()" class="btn w-full py-3">${tr('subscribeNow')}</button>
-    </div>
-  </div>`;
-}
-
 function renderNotifsView() {
   return `<div class="space-y-4">
     <h2 class="text-xl font-bold">${tr('notifs')}</h2>
     ${state.notifs.map(n => `<div class="card p-3.5 flex items-center gap-3">${avatarHTML(getUser(n.fromUid), 'w-10 h-10')}<div class="flex-1 text-xs"><span class="font-bold">@${esc(getUser(n.fromUid).username)}</span> ${esc(n.text)}</div><span class="text-[10px] muted">${timeAgo(tsToMs(n))}</span></div>`).join('') || `<div class="card p-10 text-center text-sm muted">No notifications yet.</div>`}
   </div>`;
-}
-
-function toggleSoundEffects() {
-  soundEnabled = !soundEnabled;
-  localStorage.setItem('mg_sound', soundEnabled ? 'on' : 'off');
-  if (soundEnabled) playSound('notif');
-  render();
 }
 
 function renderSettingsView() {
@@ -1929,12 +1734,11 @@ function renderSettingsView() {
       </div>
       <div><div class="text-xs muted mb-2">${tr('language')}</div><div class="grid grid-cols-2 gap-2"><button onclick="setLang('en')" class="py-2 rounded-xl text-xs font-semibold ${lang==='en' ? 'btn' : 'btn-ghost'}">English</button><button onclick="setLang('ru')" class="py-2 rounded-xl text-xs font-semibold ${lang==='ru' ? 'btn' : 'btn-ghost'}">Русский</button></div></div>
       <div><div class="text-xs muted mb-2">${tr('appearance')}</div><div class="grid grid-cols-2 gap-2"><button onclick="setTheme('dark')" class="py-2 rounded-xl text-xs font-semibold ${theme==='dark' ? 'btn' : 'btn-ghost'}">${tr('dark')}</button><button onclick="setTheme('light')" class="py-2 rounded-xl text-xs font-semibold ${theme==='light' ? 'btn' : 'btn-ghost'}">${tr('light')}</button></div></div>
-      <button onclick="state.tab='verification';render()" class="btn-ghost w-full py-2.5 text-xs flex items-center justify-between px-4"><span>${tr('verificationTitle')}</span><span>→</span></button>
     </div>
     <div class="card p-4 space-y-2 text-xs">
       <div class="font-bold text-sm">${tr('aboutApp')}</div>
       <p class="muted leading-relaxed">${tr('aboutDesc')}</p>
-      <div class="pt-2 border-t line flex justify-between muted font-medium"><span>Moodgram v3.0</span><span>${tr('byline')}</span></div>
+      <div class="pt-2 border-t line flex justify-between muted font-medium"><span>Moodgram v4.0</span><span>${tr('byline')}</span></div>
     </div>
     <button onclick="logoutUser()" class="btn-ghost w-full py-3 text-rose-400 font-semibold">${tr('logout')}</button>
   </div>`;
@@ -1947,7 +1751,7 @@ function renderModals() {
     root.innerHTML = `<div class="fixed inset-0 z-50 bg-black/70 flex items-end md:items-center justify-center p-0 md:p-4" onclick="if(event.target===this){state.activeModal=null;render()}">
       <div class="card w-full md:max-w-md rounded-b-none md:rounded-3xl p-5 space-y-4">
         <div class="flex justify-between items-center"><h3 class="font-bold text-base">${tr('shareMood')}</h3><button onclick="state.activeModal=null;render()" class="muted text-lg">✕</button></div>
-        <div class="grid grid-cols-5 gap-2">${MOOD_LIST.map(m => `<button onclick="state.selectedMood='${m.emoji}';render()" class="mood-chip mx-auto ${state.selectedMood===m.emoji ? 'on' : ''}">${m.emoji}</button>`).join('')}</div>
+        <div class="grid grid-cols-4 gap-2">${MOOD_LIST.map(m => `<button onclick="state.selectedMood='${m.emoji}';render()" class="mood-chip mx-auto ${state.selectedMood===m.emoji ? 'on' : ''}">${m.emoji}</button>`).join('')}</div>
         <textarea oninput="state.moodDraft=this.value" rows="3" maxlength="240" placeholder="${tr('moodExplainPh')}" class="input resize-none">${esc(state.moodDraft)}</textarea>
         <button onclick="saveMoodPost()" class="btn w-full py-3">${tr('postMood')}</button>
       </div>
@@ -1984,25 +1788,12 @@ function viewStory(storyId) {
   if (!s) return;
   const u = getUser(s.uid);
   $('modalroot').innerHTML = `<div class="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center p-4" onclick="state.activeModal=null;renderModals()">
-    <div class="max-w-sm w-full space-y-3">
-      <div class="flex items-center gap-2.5 text-white">${avatarHTML(u, 'w-9 h-9')}<span class="font-semibold text-sm">@${esc(u.username)}</span></div>
-      <img src="${esc(s.image)}" class="w-full max-h-[75vh] object-contain rounded-2xl">
+    <div class="max-w-sm w-full space-y-3 text-center">
+      <div class="flex items-center gap-2.5 text-white justify-center">${avatarHTML(u, 'w-9 h-9')}<span class="font-semibold text-sm">@${esc(u.username)}</span></div>
+      <img src="${esc(s.image)}" class="w-full max-h-[70vh] object-contain rounded-2xl mx-auto">
+      ${s.music ? `<div class="text-xs text-blue-400 font-medium">🎵 Playing music: ${esc(s.music)}</div>` : ''}
     </div>
   </div>`;
-}
-
-function setLang(newLang) {
-  lang = newLang;
-  localStorage.setItem('mg_lang', newLang);
-  if (db && state.user && state.profile) db.collection('users').doc(state.user.uid).update({ language: newLang }).catch(() => {});
-  render();
-}
-
-function setTheme(newTheme) {
-  theme = newTheme;
-  localStorage.setItem('mg_theme', newTheme);
-  document.documentElement.classList.toggle('light', newTheme === 'light');
-  render();
 }
 
 function renderChrome() {
@@ -2021,7 +1812,7 @@ function renderChrome() {
     <div class="flex items-center gap-3 px-2 py-3">${logoSVG('w-10 h-10')}<div><div class="text-xl logo-text leading-none">Moodgram</div><div class="text-[10px] muted mt-0.5">${tr('byline')}</div></div></div>
     <div class="space-y-1 mt-4 flex-1">${navItems.map(([k, iconFn, label]) => {
       const act = state.tab === k || (k === 'mood' && state.tab === 'friends_mood');
-      return `<button onclick="state.tab='${k}';state.chatWith=null;render()" class="w-full flex items-center gap-3.5 px-3.5 py-3 rounded-2xl text-sm transition ${act ? 'soft font-bold text-white border line' : 'muted hover:text-white'}">${iconFn(act)}<span>${label}</span></button>`;
+      return `<button onclick="state.tab='${k}';localStorage.setItem('mg_last_tab','${k}');state.chatWith=null;render()" class="w-full flex items-center gap-3.5 px-3.5 py-3 rounded-2xl text-sm transition ${act ? 'soft font-bold text-white border line' : 'muted hover:text-white'}">${iconFn(act)}<span>${label}</span></button>`;
     }).join('')}</div>
     <button onclick="openMoodComposer()" class="btn w-full py-3 mb-2">+ ${tr('shareMood')}</button>
     <div class="text-[10px] text-center muted py-1">${tr('byline')}</div>` : '';
@@ -2031,7 +1822,7 @@ function renderChrome() {
     <div class="flex items-center gap-4">
       <button onclick="state.tab='notifs';render()" class="icon-btn">${ICONS.notifs(state.tab==='notifs')}</button>
       <button onclick="state.tab='chats';state.chatWith=null;render()" class="icon-btn">${ICONS.chats(state.tab==='chats')}</button>
-      <button onclick="state.tab='settings';render()" class="icon-btn">${ICONS.settings(state.tab==='settings')}</button>
+      <button onclick="state.tab='settings';render()" class="icon-btn">${ICONS.settings()}</button>
     </div>` : '';
 
   $('nav').innerHTML = loggedIn && !state.chatWith ? `
@@ -2063,7 +1854,6 @@ function renderMain() {
     notifs: () => renderNotifsView(),
     profile: () => renderProfileView(null),
     user_profile: () => renderProfileView(state.viewUserId),
-    verification: () => renderVerificationView(),
     settings: () => renderSettingsView()
   };
   $('main').innerHTML = (routes[state.tab] || routes.home)();
